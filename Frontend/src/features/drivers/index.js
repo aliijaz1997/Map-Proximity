@@ -7,9 +7,10 @@ import {
   CONFIRMATION_MODAL_CLOSE_TYPES,
   MODAL_BODY_TYPES,
 } from "../../utils/globalConstantUtil";
-import { useGetDriversQuery } from "../../app/service/api";
+import { useGetDriversQuery, useGetUsersQuery } from "../../app/service/api";
 import { openModal } from "../common/modalSlice";
 import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
+import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
 
 const TopSideButtons = ({}) => {
   const [searchText, setSearchText] = useState("");
@@ -44,7 +45,9 @@ const TopSideButtons = ({}) => {
 function Drivers() {
   const dispatch = useDispatch();
 
-  const { data: driversList = [], isLoading } = useGetDriversQuery();
+  const { data: driversList = [], isLoading } = useGetUsersQuery({
+    role: "driver",
+  });
 
   const deleteCurrentDriver = (index) => {
     dispatch(
@@ -54,6 +57,17 @@ function Drivers() {
         extraObject: {
           message: `Are you sure you want to delete this driver?`,
           type: CONFIRMATION_MODAL_CLOSE_TYPES.DRIVER_DELETE,
+          index,
+        },
+      })
+    );
+  };
+  const openEditModal = (index) => {
+    dispatch(
+      openModal({
+        title: "Edit Driver",
+        bodyType: MODAL_BODY_TYPES.EDIT_DRIVER,
+        extraObject: {
           index,
         },
       })
@@ -135,6 +149,12 @@ function Drivers() {
                       )}
                     </td>
                     <td className="px-4 py-2">
+                      <button
+                        className="btn btn-square btn-ghost"
+                        onClick={() => openEditModal(driver._id)}
+                      >
+                        <PencilIcon className="w-5" />
+                      </button>
                       <button
                         className="btn btn-square btn-ghost"
                         onClick={() => deleteCurrentDriver(driver._id)}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import InputText from "../../../components/Input/InputText";
 import ErrorText from "../../../components/Typography/ErrorText";
@@ -7,33 +7,43 @@ import SelectBox from "../../../components/Input/SelectBox";
 import { isValidEmail } from "../../../utils/emailFormatTest";
 import ImageUploadComponent from "../../../components/Input/ImageUpload";
 import GoogleAutocomplete from "../../../components/Input/googleMapAutoComplete";
-import { useAddUserMutation } from "../../../app/service/api";
+import {
+  useGetUserByIdQuery,
+  useUpdateUserMutation,
+} from "../../../app/service/api";
 
-const INITIAL_Driver_OBJ = {
-  first_name: "",
-  last_name: "",
-  email: "",
-  password: "",
-  phoneNumber: "+92",
-  status: "active",
-  imageUrl: "",
-  carImage: "",
-  carName: "hatchback",
-  carNumber: "",
-  role: "driver",
-};
+function EditDriverModalBody({ closeModal, extraObject }) {
+  const { index: id } = extraObject;
 
-function AddDriverModalBody({ closeModal }) {
   const dispatch = useDispatch();
-  const [errorMessage, setErrorMessage] = useState("");
-  const [driverObj, setDriverObj] = useState(INITIAL_Driver_OBJ);
 
-  const [addNewDriver, { isLoading, isError, isSuccess }] =
-    useAddUserMutation();
-  const saveNewDriver = () => {
-    if (driverObj.first_name.trim() === "")
+  const {
+    data: driverDetails,
+    isLoading: isDriverDetailsLoading,
+    isError: isDriverDetailsError,
+    isSuccess: isDriverDetailsFetched,
+  } = useGetUserByIdQuery({ id });
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const [driverObj, setDriverObj] = useState(driverDetails ?? {});
+
+  const [
+    updateDriver,
+    {
+      isLoading: isDriverUpdating,
+      isError: isDriverError,
+      isSuccess: isDriverUpdated,
+    },
+  ] = useUpdateUserMutation();
+
+  useEffect(() => {
+    setDriverObj(driverDetails);
+  }, [driverDetails]);
+
+  const saveDriver = () => {
+    if (driverObj.firstName.trim() === "")
       return setErrorMessage("First Name is required!");
-    if (driverObj.last_name.trim() === "")
+    if (driverObj.lastName.trim() === "")
       return setErrorMessage("Last Name is required!");
     else if (driverObj.email.trim() === "" || !isValidEmail(driverObj.email))
       return setErrorMessage(
@@ -45,8 +55,6 @@ function AddDriverModalBody({ closeModal }) {
       return setErrorMessage("Please select the status");
     else if (driverObj.carName.trim() === "")
       return setErrorMessage("Please provide the car name");
-    else if (driverObj.password.trim() === "")
-      return setErrorMessage("Please provide the password");
     else if (driverObj.carNumber.trim() === "")
       return setErrorMessage("Please provide the car number");
     else if (!driverObj.location)
@@ -61,25 +69,21 @@ function AddDriverModalBody({ closeModal }) {
       let newCustomerObj = {
         email: driverObj.email,
         phoneNumber: driverObj.phoneNumber,
-        firstName: driverObj.first_name,
-        lastName: driverObj.last_name,
+        firstName: driverObj.firstName,
+        lastName: driverObj.lastName,
         status: driverObj.status,
         location: driverObj.location,
         imageUrl: driverObj.imageUrl,
         carImage: driverObj.carImage,
         carName: driverObj.carName,
         carNumber: driverObj.carNumber,
-        password: driverObj.password,
-        role: driverObj.role,
-        addedBy: true,
       };
-      addNewDriver(newCustomerObj);
+      updateDriver({ ...newCustomerObj, id });
     }
   };
 
   const updateFormValue = ({ updateType, value }) => {
     setErrorMessage("");
-
     setDriverObj({ ...driverObj, [updateType]: value });
   };
 
@@ -94,30 +98,51 @@ function AddDriverModalBody({ closeModal }) {
     setDriverObj((prev) => ({ ...prev, location }));
   };
 
-  if (isLoading) {
+  if (isDriverUpdating) {
     document.body.classList.add("loading-indicator");
   }
-  if (isError) {
+  if (!driverObj || !driverDetails || isDriverDetailsLoading) {
+    document.body.classList.add("loading-indicator");
+    return;
+  }
+  if (isDriverError) {
     document.body.classList.remove("loading-indicator");
     dispatch(
       showNotification({
-        message: "Error Occurred while adding driver",
+        message: "Error Occurred while updating driver",
+        status: 2,
+      })
+    );
+  }
+  if (isDriverDetailsError) {
+    document.body.classList.remove("loading-indicator");
+    dispatch(
+      showNotification({
+        message: "Error Occurred while getting driver details",
         status: 2,
       })
     );
   }
 
-  if (isSuccess) {
+  if (isDriverUpdated) {
     document.body.classList.remove("loading-indicator");
-    dispatch(showNotification({ message: "New Driver Added!", status: 1 }));
+    dispatch(
+      showNotification({
+        message: "Driver is updated successfully!",
+        status: 1,
+      })
+    );
     closeModal();
+  }
+  if (isDriverDetailsFetched) {
+    document.body.classList.remove("loading-indicator");
   }
   return (
     <>
       <InputText
         type="text"
-        defaultValue={driverObj.first_name}
-        updateType="first_name"
+        defaultValue={driverObj.firstName}
+        updateType="firstName"
         containerStyle="mt-4"
         labelTitle="First Name"
         updateFormValue={updateFormValue}
@@ -125,8 +150,8 @@ function AddDriverModalBody({ closeModal }) {
 
       <InputText
         type="text"
-        defaultValue={driverObj.last_name}
-        updateType="last_name"
+        defaultValue={driverObj.lastName}
+        updateType="lastName"
         containerStyle="mt-4"
         labelTitle="Last Name"
         updateFormValue={updateFormValue}
@@ -138,14 +163,6 @@ function AddDriverModalBody({ closeModal }) {
         updateType="email"
         containerStyle="mt-4"
         labelTitle="Email Id"
-        updateFormValue={updateFormValue}
-      />
-      <InputText
-        type="password"
-        defaultValue={driverObj.password}
-        updateType="password"
-        containerStyle="mt-4"
-        labelTitle="Password"
         updateFormValue={updateFormValue}
       />
       <InputText
@@ -190,19 +207,27 @@ function AddDriverModalBody({ closeModal }) {
         labelTitle="Car Number"
         updateFormValue={updateFormValue}
       />
-      <GoogleAutocomplete getLocation={getLocation} />
-      <ImageUploadComponent title="Profile" getImageUrl={getImageUrl} />
-      <ImageUploadComponent title="Car" getImageUrl={getCarImageUrl} />
+      <GoogleAutocomplete
+        getLocation={getLocation}
+        address={driverObj.location.address}
+      />
+      <ImageUploadComponent
+        title="Profile"
+        getImageUrl={getImageUrl}
+        url={driverObj.imageUrl}
+      />
+      <ImageUploadComponent
+        title="Car"
+        getImageUrl={getCarImageUrl}
+        url={driverObj.carImage}
+      />
 
       <ErrorText styleClass="mt-16">{errorMessage}</ErrorText>
       <div className="modal-action">
         <button className="btn btn-ghost" onClick={() => closeModal()}>
           Cancel
         </button>
-        <button
-          className="btn btn-primary px-6"
-          onClick={() => saveNewDriver()}
-        >
+        <button className="btn btn-primary px-6" onClick={() => saveDriver()}>
           Save
         </button>
       </div>
@@ -210,4 +235,4 @@ function AddDriverModalBody({ closeModal }) {
   );
 }
 
-export default AddDriverModalBody;
+export default EditDriverModalBody;

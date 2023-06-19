@@ -6,10 +6,9 @@ import { showNotification } from "../../common/headerSlice";
 import SelectBox from "../../../components/Input/SelectBox";
 import { isValidEmail } from "../../../utils/emailFormatTest";
 import ImageUploadComponent from "../../../components/Input/ImageUpload";
-import GoogleAutocomplete from "../../../components/Input/googleMapAutoComplete";
 import { useAddUserMutation } from "../../../app/service/api";
 
-const INITIAL_CUSTOMER_OBJ = {
+const INITIAL_USER_OBJ = {
   first_name: "",
   last_name: "",
   email: "",
@@ -17,69 +16,60 @@ const INITIAL_CUSTOMER_OBJ = {
   status: "active",
   imageUrl: "",
   password: "",
-  role: "customer",
+  role: "admin",
 };
 
-function AddCustomerModal({ closeModal }) {
+function AddUserModal({ closeModal }) {
   const dispatch = useDispatch();
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [customerObj, setCustomerObj] = useState(INITIAL_CUSTOMER_OBJ);
+  const [userObj, setUserObj] = useState(INITIAL_USER_OBJ);
 
   const [addNewCustomer, { isLoading, isError, isSuccess }] =
     useAddUserMutation();
   const saveNewCustomer = () => {
-    if (customerObj.first_name.trim() === "")
+    if (userObj.first_name.trim() === "")
       return setErrorMessage("First Name is required!");
-    if (customerObj.last_name.trim() === "")
+    if (userObj.last_name.trim() === "")
       return setErrorMessage("Last Name is required!");
-    else if (
-      customerObj.email.trim() === "" ||
-      !isValidEmail(customerObj.email)
-    )
+    else if (userObj.email.trim() === "" || !isValidEmail(userObj.email))
       return setErrorMessage(
         "Email is not provided or email is not in correct format!"
       );
-    else if (customerObj.phoneNumber.trim() === "")
+    else if (userObj.phoneNumber.trim() === "")
       return setErrorMessage("Phone No. is not provided!");
-    else if (customerObj.password.trim() === "")
+    else if (userObj.password.trim() === "")
       return setErrorMessage("Password is not provided!");
-    else if (customerObj.status.trim() === "")
+    else if (userObj.status.trim() === "")
       return setErrorMessage("Please select the status");
-    else if (!customerObj.location)
-      return setErrorMessage("Please select the location");
-    else if (customerObj.imageUrl.trim() === "")
+    else if (userObj.imageUrl.trim() === "")
       return setErrorMessage(
         "Upload you profile pic it is necessary for your identification."
       );
     else {
-      let newCustomerObj = {
-        email: customerObj.email,
-        phoneNumber: customerObj.phoneNumber,
-        firstName: customerObj.first_name,
-        lastName: customerObj.last_name,
-        status: customerObj.status,
-        location: customerObj.location,
-        imageUrl: customerObj.imageUrl,
-        password: customerObj.password,
-        role: customerObj.role,
+      let newUserObj = {
+        email: userObj.email,
+        phoneNumber: userObj.phoneNumber,
+        firstName: userObj.first_name,
+        lastName: userObj.last_name,
+        status: userObj.status,
+        location: userObj.location,
+        imageUrl: userObj.imageUrl,
+        password: userObj.password,
+        role: userObj.role,
         addedBy: true,
       };
-      addNewCustomer(newCustomerObj);
+      addNewCustomer(newUserObj);
     }
   };
 
   const updateFormValue = ({ updateType, value }) => {
     setErrorMessage("");
-    setCustomerObj({ ...customerObj, [updateType]: value });
+    setUserObj({ ...userObj, [updateType]: value });
   };
 
   const getImageUrl = (url) => {
-    setCustomerObj((prev) => ({ ...prev, imageUrl: url }));
-  };
-
-  const getLocation = (location) => {
-    setCustomerObj((prev) => ({ ...prev, location }));
+    setUserObj((prev) => ({ ...prev, imageUrl: url }));
   };
 
   if (loading) {
@@ -96,7 +86,7 @@ function AddCustomerModal({ closeModal }) {
     document.body.classList.remove("loading-indicator");
     dispatch(
       showNotification({
-        message: "Error Occurred while adding customer",
+        message: "Error Occurred while adding user",
         status: 2,
       })
     );
@@ -104,7 +94,7 @@ function AddCustomerModal({ closeModal }) {
 
   if (isSuccess) {
     document.body.classList.remove("loading-indicator");
-    dispatch(showNotification({ message: "New Customer Added!", status: 1 }));
+    dispatch(showNotification({ message: "New User Added!", status: 1 }));
     closeModal();
   }
 
@@ -112,7 +102,7 @@ function AddCustomerModal({ closeModal }) {
     <>
       <InputText
         type="text"
-        defaultValue={customerObj.first_name}
+        defaultValue={userObj.first_name}
         updateType="first_name"
         containerStyle="mt-4"
         labelTitle="First Name"
@@ -121,7 +111,7 @@ function AddCustomerModal({ closeModal }) {
 
       <InputText
         type="text"
-        defaultValue={customerObj.last_name}
+        defaultValue={userObj.last_name}
         updateType="last_name"
         containerStyle="mt-4"
         labelTitle="Last Name"
@@ -130,7 +120,7 @@ function AddCustomerModal({ closeModal }) {
 
       <InputText
         type="email"
-        defaultValue={customerObj.email}
+        defaultValue={userObj.email}
         updateType="email"
         containerStyle="mt-4"
         labelTitle="Email Id"
@@ -138,7 +128,7 @@ function AddCustomerModal({ closeModal }) {
       />
       <InputText
         type="password"
-        defaultValue={customerObj.password}
+        defaultValue={userObj.password}
         updateType="password"
         containerStyle="mt-4"
         labelTitle="Password"
@@ -146,7 +136,7 @@ function AddCustomerModal({ closeModal }) {
       />
       <InputText
         type="text"
-        defaultValue={customerObj.phoneNumber}
+        defaultValue={userObj.phoneNumber}
         updateType="phoneNumber"
         containerStyle="mt-4"
         labelTitle="Phone No."
@@ -154,7 +144,7 @@ function AddCustomerModal({ closeModal }) {
       />
 
       <SelectBox
-        defaultValue={customerObj.status}
+        defaultValue={userObj.status}
         updateType="status"
         containerStyle="mt-4"
         placeholder="Select Status"
@@ -164,7 +154,6 @@ function AddCustomerModal({ closeModal }) {
         ]}
         updateFormValue={updateFormValue}
       />
-      <GoogleAutocomplete getLocation={getLocation} />
       <ImageUploadComponent getImageUrl={getImageUrl} setLoading={setLoading} />
 
       <ErrorText styleClass="mt-16">{errorMessage}</ErrorText>
@@ -183,4 +172,4 @@ function AddCustomerModal({ closeModal }) {
   );
 }
 
-export default AddCustomerModal;
+export default AddUserModal;

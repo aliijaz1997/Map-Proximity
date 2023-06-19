@@ -1,10 +1,7 @@
 import { useDispatch } from "react-redux";
 import { CONFIRMATION_MODAL_CLOSE_TYPES } from "../../../utils/globalConstantUtil";
 import { showNotification } from "../headerSlice";
-import {
-  useDeleteCustomerMutation,
-  useDeleteDriverMutation,
-} from "../../../app/service/api";
+import { useDeleteUserMutation } from "../../../app/service/api";
 
 function ConfirmationModalBody({ extraObject, closeModal }) {
   const [
@@ -14,7 +11,7 @@ function ConfirmationModalBody({ extraObject, closeModal }) {
       isLoading: isCustomerLoading,
       isSuccess: isCustomerSuccess,
     },
-  ] = useDeleteCustomerMutation();
+  ] = useDeleteUserMutation();
   const [
     deleteDriver,
     {
@@ -22,7 +19,7 @@ function ConfirmationModalBody({ extraObject, closeModal }) {
       isLoading: isDriverDeleting,
       isSuccess: isDriverSuccess,
     },
-  ] = useDeleteDriverMutation();
+  ] = useDeleteUserMutation();
 
   const dispatch = useDispatch();
 
@@ -33,6 +30,9 @@ function ConfirmationModalBody({ extraObject, closeModal }) {
       await deleteCustomer({ id: index });
     }
     if (type === CONFIRMATION_MODAL_CLOSE_TYPES.DRIVER_DELETE) {
+      await deleteDriver({ id: index });
+    }
+    if (type === CONFIRMATION_MODAL_CLOSE_TYPES.USER_DELETE) {
       await deleteDriver({ id: index });
     }
   };

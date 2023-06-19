@@ -1,3 +1,4 @@
+import React from "react";
 import moment from "moment";
 import { useDispatch } from "react-redux";
 import TitleCard from "../../components/Cards/TitleCard";
@@ -13,11 +14,11 @@ import { useGetUsersQuery } from "../../app/service/api";
 const TopSideButtons = () => {
   const dispatch = useDispatch();
 
-  const openCustomerAddModal = () => {
+  const openUserAddModal = () => {
     dispatch(
       openModal({
-        title: "Add New Customer",
-        bodyType: MODAL_BODY_TYPES.CUSTOMER_ADD_NEW,
+        title: "Add New User",
+        bodyType: MODAL_BODY_TYPES.USER_ADD_NEW,
       })
     );
   };
@@ -26,7 +27,7 @@ const TopSideButtons = () => {
     <div className="inline-block float-right">
       <button
         className="btn px-6 btn-sm normal-case btn-primary"
-        onClick={() => openCustomerAddModal()}
+        onClick={() => openUserAddModal()}
       >
         Add New
       </button>
@@ -34,31 +35,31 @@ const TopSideButtons = () => {
   );
 };
 
-function Customers() {
+function Users() {
   const dispatch = useDispatch();
 
-  const { data: customersList = [], isLoading } = useGetUsersQuery({
-    role: "customer",
+  const { data: usersList = [], isLoading } = useGetUsersQuery({
+    role: "admin",
   });
 
-  const deleteCurrentCustomer = (index) => {
+  const deleteCurrentUser = (index) => {
     dispatch(
       openModal({
         title: "Confirmation",
         bodyType: MODAL_BODY_TYPES.CONFIRMATION,
         extraObject: {
-          message: `Are you sure you want to delete this customer?`,
-          type: CONFIRMATION_MODAL_CLOSE_TYPES.CUSTOMER_DELETE,
+          message: `Are you sure you want to delete this user?`,
+          type: CONFIRMATION_MODAL_CLOSE_TYPES.USER_DELETE,
           index,
         },
       })
     );
   };
-  const editCustomerModalOpen = (index) => {
+  const editUserModalOpen = (index) => {
     dispatch(
       openModal({
-        title: "  Edit Customer",
-        bodyType: MODAL_BODY_TYPES.EDIT_CUSTOMER,
+        title: "Edit User",
+        bodyType: MODAL_BODY_TYPES.EDIT_USER,
         extraObject: {
           index,
         },
@@ -93,48 +94,48 @@ function Customers() {
               </tr>
             </thead>
             <tbody>
-              {customersList.map((customer, k) => {
+              {usersList.map((user, k) => {
                 return (
                   <tr key={k}>
                     <td>
                       <div className="flex items-center space-x-3">
                         <div className="avatar">
                           <div className="mask mask-squircle w-12 h-12">
-                            <img src={customer.imageUrl} alt="Avatar" />
+                            <img src={user.imageUrl} alt="Avatar" />
                           </div>
                         </div>
                         <div>
-                          <div className="font-bold">{customer.firstName}</div>
+                          <div className="font-bold">{user.firstName}</div>
                           <div className="text-sm opacity-50">
-                            {customer.lastName}
+                            {user.lastName}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td>{customer.email}</td>
-                    <td>{customer.phoneNumber}</td>
-                    <td>{moment(customer.createdAt).format("DD MMM YY")}</td>
+                    <td>{user.email}</td>
+                    <td>{user.phoneNumber}</td>
+                    <td>{moment(user.createdAt).format("DD MMM YY")}</td>
                     <td>
-                      {customer.status === "active" ? (
+                      {user.status === "active" ? (
                         <div className="badge badge-primary">
-                          {customer.status.toUpperCase()}
+                          {user.status.toUpperCase()}
                         </div>
                       ) : (
                         <div className="badge badge-secondary">
-                          {customer.status.toUpperCase()}
+                          {user.status.toUpperCase()}
                         </div>
                       )}
                     </td>
                     <td>
                       <button
                         className="btn btn-square btn-ghost"
-                        onClick={() => editCustomerModalOpen(customer._id)}
+                        onClick={() => editUserModalOpen(user._id)}
                       >
                         <PencilIcon className="w-5" />
                       </button>
                       <button
                         className="btn btn-square btn-ghost"
-                        onClick={() => deleteCurrentCustomer(customer._id)}
+                        onClick={() => deleteCurrentUser(user._id)}
                       >
                         <TrashIcon className="w-5" />
                       </button>
@@ -150,4 +151,4 @@ function Customers() {
   );
 }
 
-export default Customers;
+export default Users;

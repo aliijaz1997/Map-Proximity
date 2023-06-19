@@ -6,82 +6,56 @@ import { baseQueryWithReauth } from "../common/baseQuery";
 export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Customers", "Customer", "Driver", "Drivers"],
+  tagTypes: ["User", "Users"],
   endpoints: (builder) => ({
-    getCustomers: builder.query({
-      query: () => {
+    getUsers: builder.query({
+      query: ({ role }) => {
         return {
-          url: `customers`,
+          url: `users/all/${role}`,
           method: "GET",
         };
       },
-      providesTags: ["Customers"],
+      providesTags: ["Users"],
     }),
-    getDrivers: builder.query({
-      query: () => {
+    getUserById: builder.query({
+      query: ({ id }) => {
         return {
-          url: `drivers`,
+          url: `users/${id}`,
           method: "GET",
         };
       },
-      providesTags: ["Drivers"],
+      providesTags: ["Users", "User"],
     }),
-    addCustomer: builder.mutation({
+    addUser: builder.mutation({
       query: (body) => ({
-        url: `customers`,
+        url: `users`,
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Customers"],
+      invalidatesTags: ["Users"],
     }),
-    addDriver: builder.mutation({
-      query: (body) => ({
-        url: `drivers`,
-        method: "POST",
-        body,
-      }),
-      invalidatesTags: ["Drivers"],
-    }),
-    updateCustomer: builder.mutation({
-      query: ({ body }) => ({
-        url: `customers`,
+    updateUser: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: `users/${id}`,
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["Customer"],
+      invalidatesTags: ["User", "Users"],
     }),
-    updateDriver: builder.mutation({
-      query: ({ body }) => ({
-        url: `drivers`,
-        method: "PUT",
-        body,
-      }),
-      invalidatesTags: ["Driver"],
-    }),
-    deleteCustomer: builder.mutation({
+    deleteUser: builder.mutation({
       query: ({ id }) => ({
-        url: `customers/${id}`,
+        url: `users/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Customers"],
-    }),
-    deleteDriver: builder.mutation({
-      query: ({ id }) => ({
-        url: `drivers/${id}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: ["Drivers"],
+      invalidatesTags: ["Users"],
     }),
   }),
 });
 
 export const {
-  useAddCustomerMutation,
-  useGetCustomersQuery,
-  useUpdateCustomerMutation,
-  useDeleteCustomerMutation,
-  useAddDriverMutation,
-  useGetDriversQuery,
-  useUpdateDriverMutation,
-  useDeleteDriverMutation,
+  useAddUserMutation,
+  useDeleteUserMutation,
+  useGetUserByIdQuery,
+  useUpdateUserMutation,
+  useGetUsersQuery,
 } = api;

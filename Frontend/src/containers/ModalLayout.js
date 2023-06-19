@@ -4,6 +4,10 @@ import { closeModal } from "../features/common/modalSlice";
 import AddCustomerModalBody from "../features/customers/components/AddCustomerModalBody";
 import ConfirmationModalBody from "../features/common/components/ConfirmationModalBody";
 import AddDriverModalBody from "../features/drivers/components/AddDriverModalBody";
+import EditDriverModalBody from "../features/drivers/components/EditDriverModalBody";
+import EditCustomerModal from "../features/customers/components/EditCustomerModal";
+import AddUserModal from "../features/users/components/AddUserModalBody";
+import EditUserModal from "../features/users/components/EditUserModalBody";
 
 function ModalLayout() {
   const { isOpen, bodyType, size, extraObject, title } = useSelector(
@@ -45,11 +49,29 @@ function ModalLayout() {
                   extraObject={extraObject}
                 />
               ),
+              [MODAL_BODY_TYPES.USER_ADD_NEW]: (
+                <AddUserModal closeModal={close} extraObject={extraObject} />
+              ),
               [MODAL_BODY_TYPES.CONFIRMATION]: (
                 <ConfirmationModalBody
                   extraObject={extraObject}
                   closeModal={close}
                 />
+              ),
+              [MODAL_BODY_TYPES.EDIT_DRIVER]: (
+                <EditDriverModalBody
+                  extraObject={extraObject}
+                  closeModal={close}
+                />
+              ),
+              [MODAL_BODY_TYPES.EDIT_CUSTOMER]: (
+                <EditCustomerModal
+                  extraObject={extraObject}
+                  closeModal={close}
+                />
+              ),
+              [MODAL_BODY_TYPES.EDIT_USER]: (
+                <EditUserModal extraObject={extraObject} closeModal={close} />
               ),
               [MODAL_BODY_TYPES.DEFAULT]: <div></div>,
             }[bodyType]

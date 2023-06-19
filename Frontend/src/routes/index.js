@@ -7,6 +7,7 @@ const Page404 = lazy(() => import("../pages/protected/404"));
 const Blank = lazy(() => import("../pages/protected/Blank"));
 const Customers = lazy(() => import("../pages/protected/Customers"));
 const Drivers = lazy(() => import("../pages/protected/Drivers"));
+const Users = lazy(() => import("../pages/protected/Users"));
 const ProfileSettings = lazy(() =>
   import("../pages/protected/ProfileSettings")
 );
@@ -15,6 +16,10 @@ const routes = [
   {
     path: "/dashboard", // the url
     component: Dashboard, // view rendered
+  },
+  {
+    path: "/users",
+    component: Users,
   },
   {
     path: "/customers",

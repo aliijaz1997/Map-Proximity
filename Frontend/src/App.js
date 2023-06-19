@@ -10,7 +10,8 @@ import { themeChange } from "theme-change";
 import initializeApp from "./app/init";
 import { useDispatch, useSelector } from "react-redux";
 import { auth } from "./utils/firebase";
-import { loginRedux } from "./app/slices/authSlice";
+import { addUserRedux, loginRedux } from "./app/slices/authSlice";
+import { useGetUserByIdQuery } from "./app/service/api";
 
 // Importing pages
 const Layout = lazy(() => import("./containers/Layout"));
@@ -22,7 +23,11 @@ initializeApp();
 
 function App() {
   const dispatch = useDispatch();
-  const { token } = useSelector((state) => state.auth);
+  const { token, user } = useSelector((state) => state.auth);
+  const { data: dataBaseUser } = useGetUserByIdQuery({
+    id: user?.uid,
+  });
+
   useEffect(() => {
     themeChange(false);
   }, []);
@@ -32,12 +37,19 @@ function App() {
       if (user) {
         user.getIdToken().then((token) => {
           dispatch(loginRedux(token));
+          dispatch(addUserRedux(user));
         });
       }
     });
 
     return unsubscribe;
   }, []);
+
+  if (token && !dataBaseUser)
+    return document.body.classList.add("loading-indicator");
+
+  if (token && dataBaseUser)
+    document.body.classList.remove("loading-indicator");
 
   return (
     <>
@@ -47,12 +59,25 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Place new routes over this */}
-          <Route path="/admin/*" element={<Layout />} />
+          {token && dataBaseUser?.role === "admin" ? (
+            <Route path="/admin/*" element={<Layout />} />
+          ) : (
+            <Route path="/client/*" element={<Layout />} />
+          )}
 
           <Route
             path="*"
             element={
-              <Navigate to={token ? "/admin/dashboard" : "/login"} replace />
+              <Navigate
+                to={
+                  token
+                    ? dataBaseUser?.role === "admin"
+                      ? "/admin/dashboard"
+                      : `/client/${dataBaseUser?.role}`
+                    : "/login"
+                }
+                replace
+              />
             }
           />
         </Routes>

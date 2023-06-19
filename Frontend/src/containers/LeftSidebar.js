@@ -1,13 +1,19 @@
 import routes from "../routes/sidebar";
+import customerSideBar from "../routes/customerSideBar";
+import driverSideBar from "../routes/driverSideBar";
 import { NavLink, Routes, Link, useLocation } from "react-router-dom";
 import SidebarSubmenu from "./SidebarSubmenu";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { useGetUserByIdQuery } from "../app/service/api";
 
 function LeftSidebar() {
-  const location = useLocation();
+  const { user } = useSelector((state) => state.auth);
+  const { data: dataBaseUser } = useGetUserByIdQuery({
+    id: user?.uid,
+  });
 
-  const dispatch = useDispatch();
+  const location = useLocation();
 
   const close = (e) => {
     document.getElementById("left-sidebar-drawer").click();
@@ -34,33 +40,95 @@ function LeftSidebar() {
             Map Proximity
           </Link>{" "}
         </li>
-        {routes.map((route, k) => {
-          return (
-            <li className="" key={k}>
-              {route.submenu ? (
-                <SidebarSubmenu {...route} />
-              ) : (
-                <NavLink
-                  end
-                  to={route.path}
-                  className={({ isActive }) =>
-                    `${
-                      isActive ? "font-semibold  bg-base-200 " : "font-normal"
-                    }`
-                  }
-                >
-                  {route.icon} {route.name}
-                  {location.pathname === route.path ? (
-                    <span
-                      className="absolute inset-y-0 left-0 w-1 rounded-tr-md rounded-br-md bg-primary "
-                      aria-hidden="true"
-                    ></span>
-                  ) : null}
-                </NavLink>
-              )}
-            </li>
-          );
-        })}
+        {dataBaseUser?.role === "admin"
+          ? routes.map((route, k) => {
+              return (
+                <li className="" key={k}>
+                  {route.submenu ? (
+                    <SidebarSubmenu {...route} />
+                  ) : (
+                    <NavLink
+                      end
+                      to={route.path}
+                      className={({ isActive }) =>
+                        `${
+                          isActive
+                            ? "font-semibold  bg-base-200 "
+                            : "font-normal"
+                        }`
+                      }
+                    >
+                      {route.icon} {route.name}
+                      {location.pathname === route.path ? (
+                        <span
+                          className="absolute inset-y-0 left-0 w-1 rounded-tr-md rounded-br-md bg-primary "
+                          aria-hidden="true"
+                        ></span>
+                      ) : null}
+                    </NavLink>
+                  )}
+                </li>
+              );
+            })
+          : dataBaseUser?.role === "customer"
+          ? customerSideBar.map((route, k) => {
+              return (
+                <li className="" key={k}>
+                  {route.submenu ? (
+                    <SidebarSubmenu {...route} />
+                  ) : (
+                    <NavLink
+                      end
+                      to={route.path}
+                      className={({ isActive }) =>
+                        `${
+                          isActive
+                            ? "font-semibold  bg-base-200 "
+                            : "font-normal"
+                        }`
+                      }
+                    >
+                      {route.icon} {route.name}
+                      {location.pathname === route.path ? (
+                        <span
+                          className="absolute inset-y-0 left-0 w-1 rounded-tr-md rounded-br-md bg-primary "
+                          aria-hidden="true"
+                        ></span>
+                      ) : null}
+                    </NavLink>
+                  )}
+                </li>
+              );
+            })
+          : driverSideBar.map((route, k) => {
+              return (
+                <li className="" key={k}>
+                  {route.submenu ? (
+                    <SidebarSubmenu {...route} />
+                  ) : (
+                    <NavLink
+                      end
+                      to={route.path}
+                      className={({ isActive }) =>
+                        `${
+                          isActive
+                            ? "font-semibold  bg-base-200 "
+                            : "font-normal"
+                        }`
+                      }
+                    >
+                      {route.icon} {route.name}
+                      {location.pathname === route.path ? (
+                        <span
+                          className="absolute inset-y-0 left-0 w-1 rounded-tr-md rounded-br-md bg-primary "
+                          aria-hidden="true"
+                        ></span>
+                      ) : null}
+                    </NavLink>
+                  )}
+                </li>
+              );
+            })}
       </ul>
     </div>
   );

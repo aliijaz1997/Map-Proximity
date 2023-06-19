@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { storage } from "../../utils/firebase";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
-const ImageUploadComponent = ({ getImageUrl, title }) => {
-  const [selectedImage, setSelectedImage] = useState(null);
+const ImageUploadComponent = ({ getImageUrl, title, url }) => {
+  const [selectedImage, setSelectedImage] = useState(url || "");
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (
@@ -13,7 +13,7 @@ const ImageUploadComponent = ({ getImageUrl, title }) => {
         file.type === "image/jpeg")
     ) {
       document.body.classList.add("loading-indicator");
-      setSelectedImage(file);
+      setSelectedImage(URL.createObjectURL(file));
 
       // Upload image to Firebase Storage
       const imageRef = ref(storage, file.name);
@@ -51,11 +51,7 @@ const ImageUploadComponent = ({ getImageUrl, title }) => {
       {selectedImage && (
         <div className="mb-4">
           <h2 className="font-bold">Selected Image of {title}</h2>
-          <img
-            className="mt-2 max-w-full"
-            src={URL.createObjectURL(selectedImage)}
-            alt="Selected"
-          />
+          <img className="mt-2 max-w-full" src={selectedImage} alt="Selected" />
         </div>
       )}
     </div>

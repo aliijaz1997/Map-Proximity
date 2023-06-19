@@ -9,12 +9,26 @@ function InputText({
   placeholder,
   updateFormValue,
   updateType,
+  disabled,
 }) {
   const [value, setValue] = useState(defaultValue);
 
+  const regexPattern = /^[0-9]+$/;
+  const regex = new RegExp(regexPattern);
   const updateInputValue = (val) => {
-    setValue(val);
-    updateFormValue({ updateType, value: val });
+    if (updateType === "phoneNumber") {
+      if (
+        val.startsWith("+92") &&
+        val.length <= 13 &&
+        regex.test(Number(val))
+      ) {
+        setValue(val);
+        updateFormValue({ updateType, value: val });
+      }
+    } else {
+      setValue(val);
+      updateFormValue({ updateType, value: val });
+    }
   };
   return (
     <div className={`form-control w-full ${containerStyle}`}>
@@ -29,6 +43,7 @@ function InputText({
         placeholder={placeholder || ""}
         onChange={(e) => updateInputValue(e.target.value)}
         className="input  input-bordered w-full "
+        disabled={disabled || false}
       />
     </div>
   );

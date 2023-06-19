@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import InputText from "../../../components/Input/InputText";
 import ErrorText from "../../../components/Typography/ErrorText";
@@ -7,31 +7,43 @@ import SelectBox from "../../../components/Input/SelectBox";
 import { isValidEmail } from "../../../utils/emailFormatTest";
 import ImageUploadComponent from "../../../components/Input/ImageUpload";
 import GoogleAutocomplete from "../../../components/Input/googleMapAutoComplete";
-import { useAddUserMutation } from "../../../app/service/api";
+import {
+  useGetUserByIdQuery,
+  useUpdateUserMutation,
+} from "../../../app/service/api";
 
-const INITIAL_CUSTOMER_OBJ = {
-  first_name: "",
-  last_name: "",
-  email: "",
-  phoneNumber: "+92",
-  status: "active",
-  imageUrl: "",
-  password: "",
-  role: "customer",
-};
+function EditCustomerModal({ closeModal, extraObject }) {
+  const { index: id } = extraObject;
 
-function AddCustomerModal({ closeModal }) {
   const dispatch = useDispatch();
-  const [errorMessage, setErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [customerObj, setCustomerObj] = useState(INITIAL_CUSTOMER_OBJ);
 
-  const [addNewCustomer, { isLoading, isError, isSuccess }] =
-    useAddUserMutation();
-  const saveNewCustomer = () => {
-    if (customerObj.first_name.trim() === "")
+  const {
+    data: customerDetails,
+    isLoading: isCustomerDetailsLoading,
+    isError: isCustomerDetailsError,
+    isSuccess: isCustomerDetailsFetched,
+  } = useGetUserByIdQuery({ id });
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const [customerObj, setCustomerObj] = useState(customerDetails ?? {});
+
+  const [
+    updateCustomer,
+    {
+      isLoading: isCustomerUpdating,
+      isError: isCustomerError,
+      isSuccess: isCustomerUpdated,
+    },
+  ] = useUpdateUserMutation();
+
+  useEffect(() => {
+    setCustomerObj(customerDetails);
+  }, [customerDetails]);
+
+  const saveCustomer = () => {
+    if (customerObj.firstName.trim() === "")
       return setErrorMessage("First Name is required!");
-    if (customerObj.last_name.trim() === "")
+    if (customerObj.lastName.trim() === "")
       return setErrorMessage("Last Name is required!");
     else if (
       customerObj.email.trim() === "" ||
@@ -42,8 +54,6 @@ function AddCustomerModal({ closeModal }) {
       );
     else if (customerObj.phoneNumber.trim() === "")
       return setErrorMessage("Phone No. is not provided!");
-    else if (customerObj.password.trim() === "")
-      return setErrorMessage("Password is not provided!");
     else if (customerObj.status.trim() === "")
       return setErrorMessage("Please select the status");
     else if (!customerObj.location)
@@ -56,16 +66,13 @@ function AddCustomerModal({ closeModal }) {
       let newCustomerObj = {
         email: customerObj.email,
         phoneNumber: customerObj.phoneNumber,
-        firstName: customerObj.first_name,
-        lastName: customerObj.last_name,
+        firstName: customerObj.firstName,
+        lastName: customerObj.lastName,
         status: customerObj.status,
         location: customerObj.location,
         imageUrl: customerObj.imageUrl,
-        password: customerObj.password,
-        role: customerObj.role,
-        addedBy: true,
       };
-      addNewCustomer(newCustomerObj);
+      updateCustomer({ ...newCustomerObj, id });
     }
   };
 
@@ -82,38 +89,53 @@ function AddCustomerModal({ closeModal }) {
     setCustomerObj((prev) => ({ ...prev, location }));
   };
 
-  if (loading) {
+  if (isCustomerUpdating) {
     document.body.classList.add("loading-indicator");
   }
-  if (!loading) {
-    document.body.classList.remove("loading-indicator");
+  if (!customerObj || !customerDetails || isCustomerDetailsLoading) {
+    document.body.classList.add("loading-indicator");
+    return;
   }
 
-  if (isLoading) {
-    document.body.classList.add("loading-indicator");
-  }
-  if (isError) {
+  if (isCustomerError) {
     document.body.classList.remove("loading-indicator");
     dispatch(
       showNotification({
-        message: "Error Occurred while adding customer",
+        message: "Error Occurred while updating customer",
         status: 2,
       })
     );
   }
 
-  if (isSuccess) {
+  if (isCustomerDetailsError) {
     document.body.classList.remove("loading-indicator");
-    dispatch(showNotification({ message: "New Customer Added!", status: 1 }));
-    closeModal();
+    dispatch(
+      showNotification({
+        message: "Error Occurred while getting customer details",
+        status: 2,
+      })
+    );
   }
 
+  if (isCustomerUpdated) {
+    document.body.classList.remove("loading-indicator");
+    dispatch(
+      showNotification({
+        message: "Customer is updated successfully!",
+        status: 1,
+      })
+    );
+    closeModal();
+  }
+  if (isCustomerDetailsFetched) {
+    document.body.classList.remove("loading-indicator");
+  }
   return (
     <>
       <InputText
         type="text"
-        defaultValue={customerObj.first_name}
-        updateType="first_name"
+        defaultValue={customerObj.firstName}
+        updateType="firstName"
         containerStyle="mt-4"
         labelTitle="First Name"
         updateFormValue={updateFormValue}
@@ -121,8 +143,8 @@ function AddCustomerModal({ closeModal }) {
 
       <InputText
         type="text"
-        defaultValue={customerObj.last_name}
-        updateType="last_name"
+        defaultValue={customerObj.lastName}
+        updateType="lastName"
         containerStyle="mt-4"
         labelTitle="Last Name"
         updateFormValue={updateFormValue}
@@ -134,14 +156,6 @@ function AddCustomerModal({ closeModal }) {
         updateType="email"
         containerStyle="mt-4"
         labelTitle="Email Id"
-        updateFormValue={updateFormValue}
-      />
-      <InputText
-        type="password"
-        defaultValue={customerObj.password}
-        updateType="password"
-        containerStyle="mt-4"
-        labelTitle="Password"
         updateFormValue={updateFormValue}
       />
       <InputText
@@ -164,18 +178,21 @@ function AddCustomerModal({ closeModal }) {
         ]}
         updateFormValue={updateFormValue}
       />
-      <GoogleAutocomplete getLocation={getLocation} />
-      <ImageUploadComponent getImageUrl={getImageUrl} setLoading={setLoading} />
+      <GoogleAutocomplete
+        getLocation={getLocation}
+        address={customerObj.location.address}
+      />
+      <ImageUploadComponent
+        getImageUrl={getImageUrl}
+        url={customerObj.imageUrl}
+      />
 
       <ErrorText styleClass="mt-16">{errorMessage}</ErrorText>
       <div className="modal-action">
         <button className="btn btn-ghost" onClick={() => closeModal()}>
           Cancel
         </button>
-        <button
-          className="btn btn-primary px-6"
-          onClick={() => saveNewCustomer()}
-        >
+        <button className="btn btn-primary px-6" onClick={() => saveCustomer()}>
           Save
         </button>
       </div>
@@ -183,4 +200,4 @@ function AddCustomerModal({ closeModal }) {
   );
 }
 
-export default AddCustomerModal;
+export default EditCustomerModal;

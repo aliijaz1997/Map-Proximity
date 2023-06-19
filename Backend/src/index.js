@@ -9,12 +9,10 @@ app.use(cors());
 const connectDB = require("./utils/db");
 connectDB();
 
-const customerRoute = require("./routes/customerRoute");
-const driverRoute = require("./routes/driverRoute");
+const userRoute = require("./routes/userRoute");
 const VerifyToken = require("./middlewares/verifyToken");
 
-app.use("/api/customers", VerifyToken, customerRoute);
-app.use("/api/drivers", VerifyToken, driverRoute);
+app.use("/api/users", VerifyToken, userRoute);
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {

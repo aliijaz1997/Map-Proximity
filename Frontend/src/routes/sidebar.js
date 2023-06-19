@@ -4,6 +4,7 @@ import UserIcon from "@heroicons/react/24/outline/UserIcon";
 import Cog6ToothIcon from "@heroicons/react/24/outline/Cog6ToothIcon";
 import TruckIcon from "@heroicons/react/24/outline/TruckIcon";
 import CustomersIcon from "@heroicons/react/24/outline/UserGroupIcon";
+import UsersIcon from "@heroicons/react/24/outline/UsersIcon";
 
 const iconClasses = `h-6 w-6`;
 const submenuIconClasses = `h-5 w-5`;
@@ -13,6 +14,11 @@ const routes = [
     path: "/admin/dashboard",
     icon: <Squares2X2Icon className={iconClasses} />,
     name: "Dashboard",
+  },
+  {
+    path: "/admin/users", // url
+    icon: <UsersIcon className={iconClasses} />, // icon component
+    name: "Users", // name that appear in Sidebar
   },
   {
     path: "/admin/customers", // url
