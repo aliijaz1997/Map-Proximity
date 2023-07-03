@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from "react";
-import { usePlacesWidget } from "react-google-autocomplete";
 
 const GoogleAutocomplete = ({ getLocation, address }) => {
   const [inputValue, setInputValue] = useState(address || "");
@@ -10,28 +9,39 @@ const GoogleAutocomplete = ({ getLocation, address }) => {
     state: address?.split(",")[2] || "",
   });
   const inputRef = useRef(null);
+  let autocomplete;
 
-  const { ref } = usePlacesWidget({
-    apiKey: process.env.REACT_APP_GOOGLE_API_KEY,
-    options: {
-      types: ["(regions)"],
-      componentRestrictions: { country: "pk" }, // Restrict results to Pakistan
-    },
-    onPlaceSelected: (place) => {
-      const { formatted_address: address, geometry } = place;
+  useEffect(() => {
+    autocomplete = new window.google.maps.places.Autocomplete(
+      inputRef.current,
+      {
+        types: ["(regions)"],
+        componentRestrictions: { country: "pk" },
+      }
+    );
 
-      const location = {
-        address,
-        lat: geometry.location.lat(),
-        lng: geometry.location.lng(),
-      };
-      const [city, state, country] = address.split(",");
-      setAddressData({ city, state, country });
+    autocomplete.addListener("place_changed", handlePlaceSelected);
 
-      getLocation(location);
-      setInputValue(address);
-    },
-  });
+    return () => {
+      window.google.maps.event.clearInstanceListeners(autocomplete);
+    };
+  }, []);
+
+  const handlePlaceSelected = () => {
+    const selectedPlace = autocomplete.getPlace();
+    const { formatted_address: address, geometry } = selectedPlace;
+
+    const location = {
+      address,
+      lat: geometry.location.lat(),
+      lng: geometry.location.lng(),
+    };
+    const [city, state, country] = address.split(",");
+    setAddressData({ city, state, country });
+
+    getLocation(location);
+    setInputValue(address);
+  };
 
   useEffect(() => {
     if (inputRef.current && !inputValue) {
@@ -55,10 +65,7 @@ const GoogleAutocomplete = ({ getLocation, address }) => {
       </label>{" "}
       <input
         placeholder="Select the Address"
-        ref={(element) => {
-          ref.current = element;
-          inputRef.current = element;
-        }}
+        ref={inputRef}
         className="input  input-bordered w-full "
         value={inputValue}
         onChange={handleInputChange}

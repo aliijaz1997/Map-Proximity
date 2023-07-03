@@ -73,7 +73,7 @@ function App() {
                   token
                     ? dataBaseUser?.role === "admin"
                       ? "/admin/dashboard"
-                      : `/client/${dataBaseUser?.role}`
+                      : "/client/dashboard"
                     : "/login"
                 }
                 replace

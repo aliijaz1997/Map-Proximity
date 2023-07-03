@@ -73,6 +73,9 @@ function Header() {
                 "fill-current w-6 h-6 " +
                 (currentTheme === "dark" ? "swap-on" : "swap-off")
               }
+              onClick={() => {
+                window.dispatchEvent(new Event("storage"));
+              }}
             />
             <MoonIcon
               data-set-theme="dark"
@@ -81,6 +84,9 @@ function Header() {
                 "fill-current w-6 h-6 " +
                 (currentTheme === "light" ? "swap-on" : "swap-off")
               }
+              onClick={() => {
+                window.dispatchEvent(new Event("storage"));
+              }}
             />
           </label>
 

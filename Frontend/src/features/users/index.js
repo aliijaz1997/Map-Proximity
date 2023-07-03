@@ -77,7 +77,7 @@ function Users() {
   return (
     <>
       <TitleCard
-        title="Customers"
+        title="Users"
         topMargin="mt-2"
         TopSideButtons={<TopSideButtons />}
       >

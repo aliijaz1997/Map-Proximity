@@ -26,7 +26,6 @@ function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loginObj, setLoginObj] = useState(INITIAL_LOGIN_OBJ);
 
-  console.log(loginObj);
   const submitForm = async (e) => {
     e.preventDefault();
     setErrorMessage("");

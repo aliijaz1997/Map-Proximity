@@ -7,7 +7,7 @@ function InternalPage() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(setPageTitle({ title: "Customers" }));
+    dispatch(setPageTitle({ title: "Book a Ride" }));
   }, []);
 
   return <CustomerClient />;

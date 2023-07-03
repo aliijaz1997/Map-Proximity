@@ -1,10 +1,8 @@
-import React from "react";
-import Map from "../../components/Map/map";
+import Map from "../../components/Map/Map";
 
 export default function CustomerClient() {
   return (
-    <div>
-      <h1>Google Maps</h1>
+    <div className="flex flex-col text-center">
       <Map />
     </div>
   );
