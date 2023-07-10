@@ -12,8 +12,18 @@ import { Link } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../utils/firebase";
 import { logoutRedux } from "../app/slices/authSlice";
+import io from "socket.io-client";
+import { useGetUserByIdQuery } from "../app/service/api";
+import socket from "../utils/socket";
 
 function Header() {
+  const [isOnline, setIsOnline] = useState(true);
+
+  const { user: reduxUser } = useSelector((state) => state.auth);
+  const { data: user, isLoading } = useGetUserByIdQuery({
+    id: reduxUser?.uid,
+  });
+
   const dispatch = useDispatch();
   const { noOfNotifications, pageTitle } = useSelector((state) => state.header);
   const [currentTheme, setCurrentTheme] = useState(
@@ -50,6 +60,32 @@ function Header() {
     });
   }
 
+  useEffect(() => {
+    if (user) {
+      if (user.role === "driver") {
+        console.log("hello driver");
+        socket.emit("add-driver", {
+          name: user.firstName,
+          phoneNumber: user.phoneNumber,
+          online: isOnline,
+        });
+      }
+      if (user.role === "customer") {
+        console.log("hello customer");
+        socket.emit("add-customer", {
+          name: user.firstName,
+          phoneNumber: user.phoneNumber,
+        });
+      }
+    }
+  }, [isOnline, user]);
+
+  if (isLoading && !user) {
+    document.body.classList.add("loading-indicator");
+  }
+  if (!isLoading && user) {
+    document.body.classList.remove("loading-indicator");
+  }
   return (
     <>
       <div className="navbar  flex justify-between bg-base-100  z-10 shadow-md ">
@@ -64,6 +100,24 @@ function Header() {
         </div>
 
         <div className="order-last">
+          {user.role === "driver" && (
+            <button
+              className={`rounded-full w-14 h-6 ${
+                isOnline ? "bg-green-500" : "bg-gray-300"
+              }`}
+              onClick={() => {
+                setIsOnline(!isOnline);
+              }}
+            >
+              <span
+                className={`block w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                  isOnline
+                    ? "translate-x-8 bg-white"
+                    : "translate-x-0 bg-gray-500"
+                }`}
+              />
+            </button>
+          )}
           <label className="swap ">
             <input type="checkbox" />
             <SunIcon

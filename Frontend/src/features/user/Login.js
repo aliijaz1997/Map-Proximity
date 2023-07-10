@@ -101,7 +101,7 @@ function Login() {
                   labelTitle="Password"
                   updateFormValue={updateFormValue}
                 />
-                <SelectBox
+                {/* <SelectBox
                   defaultValue={loginObj.status}
                   updateType="role"
                   containerStyle="mt-4"
@@ -112,7 +112,7 @@ function Login() {
                     { name: "Customer", value: "customer" },
                   ]}
                   updateFormValue={updateFormValue}
-                />
+                /> */}
               </div>
 
               <div className="text-right text-primary">
