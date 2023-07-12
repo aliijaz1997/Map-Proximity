@@ -1,29 +1,40 @@
 import React, { useEffect } from "react";
 import socket from "../../utils/socket";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useGetUserByIdQuery } from "../../app/service/api";
 import PreStartRideDriverModal from "./PreStartRideDriverModal";
+import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
+import { openModal } from "../common/modalSlice";
 
 export default function DriverClient() {
   const [showRequestModal, setShowRequestModal] = React.useState(false);
-  const [showPreStartRideModal, setShowPreStartModal] = React.useState(false);
   const [customerInfo, setCustomerInfo] = React.useState(null);
-  const [driver, setDriver] = React.useState(null);
-
   const [remainingTime, setRemainingTime] = React.useState(null);
 
   const { user: reduxUser } = useSelector((state) => state.auth);
   const { data: user, isLoading } = useGetUserByIdQuery({
     id: reduxUser?.uid,
   });
+  const dispatch = useDispatch();
 
   const progressBarWidth = ((remainingTime || 15) / 15) * 100;
 
+  const openPreStartRideModal = ({ customerName, address }) => {
+    dispatch(
+      openModal({
+        title: "Customer is waiting!",
+        bodyType: MODAL_BODY_TYPES.PRE_START_DRIVER_RIDE_MODAL,
+        extraObject: {
+          customerName,
+          address,
+        },
+      })
+    );
+  };
+
   useEffect(() => {
     if (socket) {
-      console.log("in socket");
       socket.on("driver-ride-request", (data) => {
-        console.log("in driver request socket");
         setCustomerInfo(data);
         setShowRequestModal(true);
       });
@@ -36,9 +47,11 @@ export default function DriverClient() {
 
       socket.on("driver-assign", ({ customer, driver }) => {
         setShowRequestModal(false);
-        setShowPreStartModal(true);
+        openPreStartRideModal({
+          customerName: `${customer.customer.firstName} ${customer.customer.lastName}`,
+          address: customer.currentAddress,
+        });
         setCustomerInfo(customer);
-        setDriver(driver);
       });
     }
   });
@@ -88,16 +101,6 @@ export default function DriverClient() {
             </div>
           </div>
         </div>
-      )}
-      {showPreStartRideModal && (
-        <PreStartRideDriverModal
-          onClose={() => {
-            setShowPreStartModal(false);
-          }}
-          handleStartRide={() => {}}
-          customerName={customerInfo?.customer.firstName}
-          address={customerInfo?.currentAddress}
-        />
       )}
     </div>
   );

@@ -16,4 +16,4 @@ function InternalPage(){
     )
 }
 
-export default InternalPage
+export default InternalPage 

@@ -12,7 +12,6 @@ import { Link } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../utils/firebase";
 import { logoutRedux } from "../app/slices/authSlice";
-import io from "socket.io-client";
 import { useGetUserByIdQuery } from "../app/service/api";
 import socket from "../utils/socket";
 
@@ -63,7 +62,6 @@ function Header() {
   useEffect(() => {
     if (user) {
       if (user.role === "driver") {
-        console.log("hello driver");
         socket.emit("add-driver", {
           name: user.firstName,
           phoneNumber: user.phoneNumber,
@@ -71,7 +69,6 @@ function Header() {
         });
       }
       if (user.role === "customer") {
-        console.log("hello customer");
         socket.emit("add-customer", {
           name: user.firstName,
           phoneNumber: user.phoneNumber,

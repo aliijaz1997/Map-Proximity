@@ -8,6 +8,9 @@ import EditDriverModalBody from "../features/drivers/components/EditDriverModalB
 import EditCustomerModal from "../features/customers/components/EditCustomerModal";
 import AddUserModal from "../features/users/components/AddUserModalBody";
 import EditUserModal from "../features/users/components/EditUserModalBody";
+import FindingDriverModal from "../components/Map/FindingDriverModal";
+import NoRideFoundModal from "../components/Map/NoRideFoundModal";
+import PreStartRideDriverModal from "../features/Client/PreStartRideDriverModal";
 
 function ModalLayout() {
   const { isOpen, bodyType, size, extraObject, title } = useSelector(
@@ -72,6 +75,24 @@ function ModalLayout() {
               ),
               [MODAL_BODY_TYPES.EDIT_USER]: (
                 <EditUserModal extraObject={extraObject} closeModal={close} />
+              ),
+              [MODAL_BODY_TYPES.FINDING_CUSTOMER_MODAL]: (
+                <FindingDriverModal
+                  extraObject={extraObject}
+                  closeModal={close}
+                />
+              ),
+              [MODAL_BODY_TYPES.NO_RIDE_FOUND_MODAL]: (
+                <NoRideFoundModal
+                  extraObject={extraObject}
+                  closeModal={close}
+                />
+              ),
+              [MODAL_BODY_TYPES.PRE_START_DRIVER_RIDE_MODAL]: (
+                <PreStartRideDriverModal
+                  extraObject={extraObject}
+                  closeModal={close}
+                />
               ),
               [MODAL_BODY_TYPES.DEFAULT]: <div></div>,
             }[bodyType]
