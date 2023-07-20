@@ -10,6 +10,7 @@ import UserChannels from "./components/UserChannels";
 import LineChart from "./components/LineChart";
 import BarChart from "./components/BarChart";
 import DoughnutChart from "./components/DoughnutChart";
+import DrawPolygon from "./components/PolygonMapDraw";
 
 const statsData = [
   {
@@ -66,6 +67,9 @@ function Dashboard() {
       <div className="grid lg:grid-cols-2 mt-4 grid-cols-1 gap-6">
         <UserChannels />
         <DoughnutChart />
+      </div>
+      <div className="grid mt-4">
+        <DrawPolygon />
       </div>
     </>
   );

@@ -14,9 +14,11 @@ const server = http.createServer(app);
 require("./socket/index")(server);
 
 const userRoute = require("./routes/userRoute");
+const locationRoute = require("./routes/locationRoute");
 const VerifyToken = require("./middlewares/verifyToken");
 
 app.use("/api/users", VerifyToken, userRoute);
+app.use("/api/location", VerifyToken, locationRoute);
 
 const port = process.env.PORT || 5000;
 

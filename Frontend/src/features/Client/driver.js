@@ -65,6 +65,8 @@ export default function DriverClient() {
 
   return (
     <div className=" dark:text-gray-300 flex justify-center items-center mt-8">
+      The popup will appear when any customer will request the ride with in your
+      area!
       {showRequestModal && (
         <div className="fixed inset-0 flex justify-center items-center z-50 bg bg-opacity-75">
           <div className=" rounded-lg p-8 relative">

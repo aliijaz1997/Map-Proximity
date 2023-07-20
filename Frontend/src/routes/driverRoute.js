@@ -2,7 +2,7 @@
 
 import { lazy } from "react";
 
-const Dashboard = lazy(() => import("../pages/protected/Dashboard"));
+const Dashboard = lazy(() => import("../pages/protected/DriverDashboard"));
 const Customers = lazy(() => import("../pages/protected/ClientCustomer"));
 const Drivers = lazy(() => import("../pages/protected/ClientDriver"));
 

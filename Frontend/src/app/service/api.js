@@ -6,7 +6,7 @@ import { baseQueryWithReauth } from "../common/baseQuery";
 export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["User", "Users"],
+  tagTypes: ["User", "Users", "Location"],
   endpoints: (builder) => ({
     getUsers: builder.query({
       query: ({ role }) => {
@@ -16,6 +16,15 @@ export const api = createApi({
         };
       },
       providesTags: ["Users"],
+    }),
+    getLocation: builder.query({
+      query: () => {
+        return {
+          url: "location",
+          method: "GET",
+        };
+      },
+      providesTags: ["Location"],
     }),
     getUserById: builder.query({
       query: ({ id }) => {
@@ -49,6 +58,21 @@ export const api = createApi({
       }),
       invalidatesTags: ["Users"],
     }),
+    updateLocation: builder.mutation({
+      query: (body) => ({
+        url: `location`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Location"],
+    }),
+    deleteLocation: builder.mutation({
+      query: () => ({
+        url: `location`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Location"],
+    }),
   }),
 });
 
@@ -58,4 +82,7 @@ export const {
   useGetUserByIdQuery,
   useUpdateUserMutation,
   useGetUsersQuery,
+  useGetLocationQuery,
+  useUpdateLocationMutation,
+  useDeleteLocationMutation,
 } = api;
