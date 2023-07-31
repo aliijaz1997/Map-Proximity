@@ -1,10 +1,14 @@
 import React, { useEffect } from "react";
 import socket from "../../utils/socket";
 import { useDispatch, useSelector } from "react-redux";
-import { useGetUserByIdQuery } from "../../app/service/api";
+import {
+  useGetUserByIdQuery,
+  useUpdateRideMutation,
+} from "../../app/service/api";
 import PreStartRideDriverModal from "./PreStartRideDriverModal";
 import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 import { openModal } from "../common/modalSlice";
+import { showNotification } from "../common/headerSlice";
 
 export default function DriverClient() {
   const [showRequestModal, setShowRequestModal] = React.useState(false);
@@ -15,18 +19,19 @@ export default function DriverClient() {
   const { data: user, isLoading } = useGetUserByIdQuery({
     id: reduxUser?.uid,
   });
+  const [updateRide, { isSuccess }] = useUpdateRideMutation();
   const dispatch = useDispatch();
 
   const progressBarWidth = ((remainingTime || 15) / 15) * 100;
 
-  const openPreStartRideModal = ({ customerName, address }) => {
+  const openPreStartRideModal = ({ customer, driver }) => {
     dispatch(
       openModal({
         title: "Customer is waiting!",
         bodyType: MODAL_BODY_TYPES.PRE_START_DRIVER_RIDE_MODAL,
         extraObject: {
-          customerName,
-          address,
+          customer,
+          driver,
         },
       })
     );
@@ -48,13 +53,19 @@ export default function DriverClient() {
       socket.on("driver-assign", ({ customer, driver }) => {
         setShowRequestModal(false);
         openPreStartRideModal({
-          customerName: `${customer.customer.firstName} ${customer.customer.lastName}`,
-          address: customer.currentAddress,
+          customer,
+          driver,
         });
         setCustomerInfo(customer);
       });
     }
   });
+
+  useEffect(() => {
+    if (isSuccess) {
+      dispatch(showNotification({ message: "New Ride is Added!", status: 1 }));
+    }
+  }, [isSuccess]);
 
   if (isLoading && !user) {
     document.body.classList.add("loading-indicator");
@@ -95,6 +106,23 @@ export default function DriverClient() {
                   socket.emit("ride-accepted", {
                     customer: customerInfo,
                     driver: user,
+                  });
+                  updateRide({
+                    id: customerInfo.rideId,
+                    body: {
+                      _id: customerInfo.rideId,
+                      status: "accepted",
+                      customerAddress: customerInfo.customer.location,
+                      customer: {
+                        _id: customerInfo.customer._id,
+                        name: customerInfo.customer.firstName,
+                      },
+                      driver: {
+                        _id: user._id,
+                        name: user.firstName,
+                      },
+                      driverAddress: user.location,
+                    },
                   });
                 }}
               >

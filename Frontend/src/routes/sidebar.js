@@ -5,6 +5,7 @@ import Cog6ToothIcon from "@heroicons/react/24/outline/Cog6ToothIcon";
 import TruckIcon from "@heroicons/react/24/outline/TruckIcon";
 import CustomersIcon from "@heroicons/react/24/outline/UserGroupIcon";
 import UsersIcon from "@heroicons/react/24/outline/UsersIcon";
+import ServiceIcon from "@heroicons/react/24/outline/ServerIcon";
 
 const iconClasses = `h-6 w-6`;
 const submenuIconClasses = `h-5 w-5`;
@@ -29,6 +30,11 @@ const routes = [
     path: "/admin/drivers", // url
     icon: <TruckIcon className={iconClasses} />, // icon component
     name: "Drivers", // name that appear in Sidebar
+  },
+  {
+    path: "/admin/service", // url
+    icon: <ServiceIcon className={iconClasses} />, // icon component
+    name: "Service Area", // name that appear in Sidebar
   },
   {
     path: "", //no url needed as this has submenu

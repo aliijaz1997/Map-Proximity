@@ -12,7 +12,7 @@ import { Link } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../utils/firebase";
 import { logoutRedux } from "../app/slices/authSlice";
-import { useGetUserByIdQuery } from "../app/service/api";
+import { useGetUserByIdQuery, useUpdateUserMutation } from "../app/service/api";
 import socket from "../utils/socket";
 
 function Header() {
@@ -22,6 +22,8 @@ function Header() {
   const { data: user, isLoading } = useGetUserByIdQuery({
     id: reduxUser?.uid,
   });
+
+  const [updateUser] = useUpdateUserMutation();
 
   const dispatch = useDispatch();
   const { noOfNotifications, pageTitle } = useSelector((state) => state.header);
@@ -76,6 +78,38 @@ function Header() {
       }
     }
   }, [isOnline, user]);
+
+  useEffect(() => {
+    let locationUpdateInterval;
+
+    const updateLocation = () => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const updatedLat = position.coords.latitude;
+          const updatedLng = position.coords.longitude;
+
+          updateUser({
+            id: user._id,
+            lat: updatedLat,
+            lng: updatedLng,
+          });
+          console.log(updatedLat, updatedLng);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+        }
+      );
+    };
+
+    if (isOnline && user && user.role === "driver") {
+      updateLocation();
+      locationUpdateInterval = setInterval(updateLocation, 10000);
+    } else {
+      clearInterval(locationUpdateInterval);
+    }
+
+    return () => clearInterval(locationUpdateInterval);
+  }, [isOnline, updateUser]);
 
   if (isLoading && !user) {
     document.body.classList.add("loading-indicator");

@@ -15,10 +15,12 @@ require("./socket/index")(server);
 
 const userRoute = require("./routes/userRoute");
 const locationRoute = require("./routes/locationRoute");
+const rideRoute = require("./routes/ride");
 const VerifyToken = require("./middlewares/verifyToken");
 
 app.use("/api/users", VerifyToken, userRoute);
 app.use("/api/location", VerifyToken, locationRoute);
+app.use("/api/ride", VerifyToken, rideRoute);
 
 const port = process.env.PORT || 5000;
 

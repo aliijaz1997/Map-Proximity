@@ -1,5 +1,7 @@
 const { createClient } = require("redis");
+const { v4: uuidv4 } = require("uuid");
 
+const rideId = uuidv4();
 const redisClient = createClient(6379);
 let currentTimerId = null;
 let totalCustomers = null;
@@ -84,6 +86,7 @@ module.exports = (server) => {
             rideInformation,
             currentAddress,
             customer: user,
+            rideId,
           });
 
           const timerDuration = 15; // in seconds
@@ -107,6 +110,7 @@ module.exports = (server) => {
                       rideInformation,
                       currentAddress,
                       customer: user,
+                      rideId,
                     });
 
                     startTimer(nextDriver);
@@ -174,6 +178,19 @@ module.exports = (server) => {
       }
     );
 
+    socket.on("ride-started", async ({ customerInfo, driver: driverObj }) => {
+      const stringifiedCustomer = await redisClient.hGet(
+        "onlineCustomers",
+        customerInfo.customer.phoneNumber
+      );
+
+      const customer = JSON.parse(stringifiedCustomer);
+
+      io.to(customer.socketId).emit("ride-start", {
+        customerInfo,
+        driver: driverObj,
+      });
+    });
     // socket.on("disconnect", () => {
     //   // Remove driver from available drivers list
     //   if (availableDrivers.length < 0) return;

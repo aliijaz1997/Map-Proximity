@@ -10,7 +10,7 @@ import UserChannels from "./components/UserChannels";
 import LineChart from "./components/LineChart";
 import BarChart from "./components/BarChart";
 import DoughnutChart from "./components/DoughnutChart";
-import DrawPolygon from "./components/PolygonMapDraw";
+import HeatMap from "./components/HeatMap";
 
 const statsData = [
   {
@@ -69,7 +69,7 @@ function Dashboard() {
         <DoughnutChart />
       </div>
       <div className="grid mt-4">
-        <DrawPolygon />
+        <HeatMap />
       </div>
     </>
   );

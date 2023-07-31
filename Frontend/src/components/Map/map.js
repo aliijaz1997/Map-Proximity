@@ -141,19 +141,21 @@ const Map = () => {
     let directionsService;
     let directionsRenderer;
 
-    var map = new window.google.maps.Map(mapRef.current, {
-      center: {
-        lat: currentAddress?.geometry.location.lat(),
-        lng: currentAddress?.geometry.location.lng(),
-      },
-      zoom: 18,
-      styles: isLightTheme ? null : getMapStyles(),
-      disableDefaultUI: true,
-      zoomControl: false,
-      mapTypeControlOptions: {
-        mapTypeIds: ["roadmap", "styled_map"],
-      },
-    });
+    if (mapRef.current) {
+      var map = new window.google.maps.Map(mapRef.current, {
+        center: {
+          lat: currentAddress?.geometry.location.lat(),
+          lng: currentAddress?.geometry.location.lng(),
+        },
+        zoom: 18,
+        styles: isLightTheme ? null : getMapStyles(),
+        disableDefaultUI: true,
+        zoomControl: false,
+        mapTypeControlOptions: {
+          mapTypeIds: ["roadmap", "styled_map"],
+        },
+      });
+    }
 
     directionsService = new window.google.maps.DirectionsService();
     directionsRenderer = new window.google.maps.DirectionsRenderer({
@@ -220,7 +222,13 @@ const Map = () => {
       const destination = toAutocomplete.getPlace();
       customerMarker.setVisible(false);
       let isAreaRestricted = [];
-      if (origin && destination) {
+      if (
+        origin &&
+        destination &&
+        currentAddress &&
+        currentLocation &&
+        mapRef.current
+      ) {
         if (polygons && polygons.length > 0) {
           polygons.forEach((polygon) => {
             const Polygon = new window.google.maps.Polygon({
@@ -296,6 +304,7 @@ const Map = () => {
                   distance,
                   duration,
                   fare: parseInt(distance) * 20 + 100,
+                  destinationAddress: destination.formatted_address,
                 });
               }
             }
@@ -336,21 +345,30 @@ const Map = () => {
   return !driversLocation ? (
     <div>
       <div>
-        <div className="flex">
-          <input
-            placeholder="Select your current location"
-            className="input input-bordered w-full m-3"
-            ref={fromInputRef}
-            type="text"
-          />
+        <div className="flex justify-around">
+          <div className="input-container">
+            <label htmlFor="fromInput">From: </label>
+            <input
+              id="fromInput"
+              placeholder="Select your current location"
+              className="input input-bordered"
+              ref={fromInputRef}
+              type="text"
+            />
+          </div>
 
-          <input
-            placeholder="Select your destination"
-            className="input input-bordered w-full m-3"
-            ref={toInputRef}
-            type="text"
-          />
+          <div className="input-container">
+            <label htmlFor="toInput">To: </label>
+            <input
+              id="toInput"
+              placeholder="Select your destination"
+              className="input input-bordered"
+              ref={toInputRef}
+              type="text"
+            />
+          </div>
         </div>
+
         {isLocationRestricted && (
           <div className="alert alert-error">
             The selected location is outside the restricted area.
@@ -420,7 +438,7 @@ const Map = () => {
         ></div>
       </TitleCard>
     </div>
-  ) : (
+  ) : driversLocation.lat && driversLocation.lng ? (
     <DriverCustomerLocation
       locations={{
         initialDriverLat: driversLocation.lat,
@@ -429,7 +447,10 @@ const Map = () => {
         initialCustomerLng: currentLocation.lng,
       }}
       currentLocation={currentLocation}
+      socket={socket}
     />
+  ) : (
+    <p>Loading driver location...</p>
   );
 };
 

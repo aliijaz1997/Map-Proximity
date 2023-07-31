@@ -73,6 +73,13 @@ export const api = createApi({
       }),
       invalidatesTags: ["Location"],
     }),
+    updateRide: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `ride/${id}`,
+        method: "PUT",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -85,4 +92,5 @@ export const {
   useGetLocationQuery,
   useUpdateLocationMutation,
   useDeleteLocationMutation,
+  useUpdateRideMutation,
 } = api;
