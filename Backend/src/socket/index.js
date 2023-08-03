@@ -191,6 +191,19 @@ module.exports = (server) => {
         driver: driverObj,
       });
     });
+    socket.on("ride-ended", async ({ customerInfo, driver: driverObj }) => {
+      const stringifiedCustomer = await redisClient.hGet(
+        "onlineCustomers",
+        customerInfo.customer.phoneNumber
+      );
+
+      const customer = JSON.parse(stringifiedCustomer);
+
+      io.to(customer.socketId).emit("ride-end", {
+        customerInfo,
+        driver: driverObj,
+      });
+    });
     // socket.on("disconnect", () => {
     //   // Remove driver from available drivers list
     //   if (availableDrivers.length < 0) return;

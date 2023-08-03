@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
-import { showNotification } from "../../features/common/headerSlice";
-import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 import { openModal } from "../../features/common/modalSlice";
+import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
+import { showNotification } from "../../features/common/headerSlice";
 
 const driverIconSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="green" class="w-6 h-6">
@@ -25,17 +25,14 @@ const driverIconUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
 const customerIconUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
   customerIconSvg
 )}`;
+
 function DriverCustomerLocation({ locations, currentLocation, socket }) {
-  console.log(currentLocation, locations);
   const [driverLocation, setDriverLocation] = useState(null);
   const [customerLocation, setCustomerLocation] = useState(null);
   const mapRef = useRef(null);
-  const driverMarkerRef = useRef(null);
-  const customerMarkerRef = useRef(null);
+  const [driverMarker, setDriverMaker] = useState(null);
 
   const dispatch = useDispatch();
-
-  // ... Rest of the component code ...
 
   useEffect(() => {
     const {
@@ -59,7 +56,6 @@ function DriverCustomerLocation({ locations, currentLocation, socket }) {
 
     const map = new window.google.maps.Map(mapRef.current, mapOptions);
 
-    // Create marker objects for the driver and customer
     const driverMarker = new window.google.maps.Marker({
       position: driverLocation,
       map,
@@ -70,7 +66,7 @@ function DriverCustomerLocation({ locations, currentLocation, socket }) {
     });
 
     const customerMarker = new window.google.maps.Marker({
-      position: customerLocation,
+      position: customerLocation || currentLocation,
       map,
       icon: {
         url: customerIconUrl,
@@ -78,12 +74,16 @@ function DriverCustomerLocation({ locations, currentLocation, socket }) {
       },
     });
 
-    driverMarkerRef.current = driverMarker;
-    customerMarkerRef.current = customerMarker;
-  }, [driverLocation, customerLocation, currentLocation]);
+    setDriverMaker(driverMarker);
+
+    // Clean up on component unmount
+    return () => {
+      driverMarker.setMap(null);
+      customerMarker.setMap(null);
+    };
+  }, [socket]);
 
   useEffect(() => {
-    // Update the driver location every 15 seconds
     const locationArray = [
       { lat: 30.362, lng: 71.509 },
       { lat: 30.194553, lng: 71.477242 },
@@ -98,14 +98,13 @@ function DriverCustomerLocation({ locations, currentLocation, socket }) {
       const randomIndex = Math.floor(Math.random() * locationArray.length);
       const randomLocation = locationArray[randomIndex];
 
-      setDriverLocation(randomLocation);
+      driverMarker.setPosition(randomLocation);
     }, 5000);
 
-    // Clean up on component unmount
     return () => {
       clearInterval(timer);
     };
-  }, []);
+  }, [driverMarker]);
 
   useEffect(() => {
     socket.on("ride-start", ({ customerInfo, driver }) => {
@@ -116,7 +115,7 @@ function DriverCustomerLocation({ locations, currentLocation, socket }) {
         })
       );
     });
-    socket.on("ride-ended", ({ customerInfo, driver }) => {
+    socket.on("ride-end", ({ customerInfo, driver }) => {
       dispatch(
         openModal({
           title: "Your ride has been ended",

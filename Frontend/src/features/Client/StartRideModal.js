@@ -1,9 +1,35 @@
-import React from "react";
+import React, { useEffect } from "react";
+import socket from "../../utils/socket";
+import { useUpdateRideMutation } from "../../app/service/api";
+import { useDispatch } from "react-redux";
+import { showNotification } from "../common/headerSlice";
 
 const StartRideModal = ({ closeModal, extraObject }) => {
   const { customerInfo, driver } = extraObject;
 
-  const handleEndRide = () => {};
+  const dispatch = useDispatch();
+  const [updateRide, { isSuccess }] = useUpdateRideMutation();
+
+  useEffect(() => {
+    if (isSuccess) {
+      dispatch(showNotification({ message: "Ride is updated!", status: 1 }));
+    }
+  }, [isSuccess]);
+
+  const handleEndRide = async () => {
+    socket.emit("ride-ended", {
+      customerInfo,
+      driver,
+    });
+    await updateRide({
+      id: customerInfo.rideId,
+      body: {
+        status: "completed",
+      },
+    });
+
+    closeModal();
+  };
   return (
     <div className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center">
       <div className="mb-4">
