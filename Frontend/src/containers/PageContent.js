@@ -1,5 +1,10 @@
 import Header from "./Header";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
 import routes from "../routes";
 import customerRoutes from "../routes/customerRoutes";
 import driverRoutes from "../routes/driverRoute";
@@ -71,6 +76,7 @@ function PageContent() {
                 })}
 
             {/* Redirecting unknown url to 404 page */}
+            <Route path="/" exact element={<Navigate to="/dashboard" />} />
             <Route path="*" element={<Page404 />} />
           </Routes>
         </Suspense>

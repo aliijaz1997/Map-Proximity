@@ -7,12 +7,12 @@ const submenuIconClasses = `h-5 w-5`;
 
 const routes = [
   {
-    path: "/client/dashboard",
+    path: "/dashboard",
     icon: <Squares2X2Icon className={iconClasses} />,
     name: "Dashboard",
   },
   {
-    path: "/client/customer", // url
+    path: "/customer", // url
     icon: <TruckIcon className={iconClasses} />, // icon component
     name: "Book a Ride", // name that appear in Sidebar
   },

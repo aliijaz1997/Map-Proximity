@@ -12,27 +12,27 @@ const submenuIconClasses = `h-5 w-5`;
 
 const routes = [
   {
-    path: "/admin/dashboard",
+    path: "/dashboard",
     icon: <Squares2X2Icon className={iconClasses} />,
     name: "Dashboard",
   },
   {
-    path: "/admin/users", // url
+    path: "/users", // url
     icon: <UsersIcon className={iconClasses} />, // icon component
     name: "Users", // name that appear in Sidebar
   },
   {
-    path: "/admin/customers", // url
+    path: "/customers", // url
     icon: <CustomersIcon className={iconClasses} />, // icon component
     name: "Customers", // name that appear in Sidebar
   },
   {
-    path: "/admin/drivers", // url
+    path: "/drivers", // url
     icon: <TruckIcon className={iconClasses} />, // icon component
     name: "Drivers", // name that appear in Sidebar
   },
   {
-    path: "/admin/service", // url
+    path: "/service", // url
     icon: <ServiceIcon className={iconClasses} />, // icon component
     name: "Service Area", // name that appear in Sidebar
   },
@@ -42,7 +42,7 @@ const routes = [
     name: "Settings", // name that appear in Sidebar
     submenu: [
       {
-        path: "/admin/settings-profile", //url
+        path: "/settings-profile", //url
         icon: <UserIcon className={submenuIconClasses} />, // icon component
         name: "Profile", // name that appear in Sidebar
       },
