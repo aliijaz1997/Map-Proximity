@@ -51,7 +51,6 @@ function App() {
   if (token && dataBaseUser)
     document.body.classList.remove("loading-indicator");
 
-  console.log(token);
   return (
     <>
       <Router>

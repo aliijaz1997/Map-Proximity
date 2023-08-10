@@ -13,18 +13,19 @@ import TitleCard from "../Cards/TitleCard";
 import { getLocation } from "../../utils/map/getLocation";
 import {
   destinationIconUrl,
+  driversCarIconUrl,
   personIconUrl,
   pinLocationIconUrl,
 } from "../../utils/icons";
 
 const Map = () => {
   const [currentLocation, setCurrentLocation] = useState(null);
-  const [currentAddress, setCurrentAddress] = useState(null);
   const [rideInformation, setRideInformation] = useState({
     distance: "",
     duration: "",
     fare: "",
   });
+  const [mapInstance, setMapInstance] = useState(null);
   const [isLightTheme, setIsLightTheme] = useState(
     localStorage.getItem("theme") === "light"
   );
@@ -37,7 +38,6 @@ const Map = () => {
   });
   const { data: polygons, isLoading: isLocationLoading } =
     useGetLocationQuery();
-
   const dispatch = useDispatch();
 
   const mapRef = useRef(null);
@@ -76,62 +76,65 @@ const Map = () => {
     };
   }, []);
 
-  useEffect(async () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
+  useEffect(() => {
+    const fetchCurrentLocation = async () => {
+      try {
+        if (navigator.geolocation) {
+          const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject);
+          });
+
           const { latitude, longitude } = position.coords;
           setCurrentLocation({ lat: latitude, lng: longitude });
+
           const address = await getLocation({ latitude, longitude });
-          setCurrentAddress(address);
           fromInputRef.current.value = address.formatted_address;
-        },
-        (error) => {
-          console.error("Error getting current location:", error);
+        } else {
+          console.error("Geolocation is not supported by this browser.");
         }
-      );
-    } else {
-      console.error("Geolocation is not supported by this browser.");
-    }
+      } catch (error) {
+        console.error("Error getting current location:", error);
+      }
+    };
+
+    fetchCurrentLocation();
   }, []);
 
   useEffect(() => {
-    if (mapRef.current) {
+    const map = new window.google.maps.Map(mapRef.current, {
+      center: currentLocation,
+      zoom: 18,
+      styles: isLightTheme ? null : getMapStyles(),
+      disableDefaultUI: true,
+      zoomControl: false,
+      mapTypeControlOptions: {
+        mapTypeIds: ["roadmap", "styled_map"],
+      },
+    });
+
+    setMapInstance(map);
+  }, []);
+  useEffect(() => {
+    if (mapRef.current && mapInstance) {
       let directionsService;
       let directionsRenderer;
-
-      var map = new window.google.maps.Map(mapRef.current, {
-        center: {
-          lat: currentAddress?.geometry.location.lat(),
-          lng: currentAddress?.geometry.location.lng(),
-        },
-        zoom: 18,
-        styles: isLightTheme ? null : getMapStyles(),
-        disableDefaultUI: true,
-        zoomControl: false,
-        mapTypeControlOptions: {
-          mapTypeIds: ["roadmap", "styled_map"],
-        },
-      });
+      const map = mapInstance;
 
       directionsService = new window.google.maps.DirectionsService();
       directionsRenderer = new window.google.maps.DirectionsRenderer({
         map,
         suppressMarkers: true,
       });
-
       let customerMarker = new window.google.maps.Marker({
-        position: {
-          lat: currentAddress?.geometry.location.lat(),
-          lng: currentAddress?.geometry.location.lng(),
-        },
+        position: currentLocation,
         map: map,
         icon: {
           url: pinLocationIconUrl,
-          scaledSize: new window.google.maps.Size(50, 50),
+          scaledSize: new window.google.maps.Size(50, 100),
         },
         draggable: true,
       });
+      map.setCenter(customerMarker.getPosition());
 
       customerMarker.addListener("dragend", async () => {
         const newLocation = customerMarker.getPosition();
@@ -139,7 +142,10 @@ const Map = () => {
           latitude: newLocation.lat(),
           longitude: newLocation.lng(),
         });
-        setCurrentAddress(address);
+        if (fromInputRef.current) {
+          fromInputRef.current.value = address.formatted_address;
+        }
+        map.setCenter(newLocation);
       });
 
       new window.google.maps.Marker({
@@ -150,6 +156,15 @@ const Map = () => {
           scaledSize: new window.google.maps.Size(40, 40),
         },
       });
+
+      const destinationMarker = new window.google.maps.Marker({
+        map: map,
+        icon: {
+          url: destinationIconUrl,
+          scaledSize: new window.google.maps.Size(40, 40),
+        },
+      });
+      destinationMarker.setVisible(false);
 
       const fromAutocomplete = new window.google.maps.places.Autocomplete(
         fromInputRef.current,
@@ -167,21 +182,20 @@ const Map = () => {
         }
       );
 
-      // Set the origin and destination based on the selected autocomplete values
-      const calculateRoute = () => {
+      const calculateRoute = async () => {
+        const newPinnedLocation = customerMarker.getPosition();
+        const pinnedLocationAddress = await getLocation({
+          latitude: newPinnedLocation.lat(),
+          longitude: newPinnedLocation.lng(),
+        });
         const origin = fromAutocomplete.getPlace()
           ? fromAutocomplete.getPlace()
-          : currentAddress;
+          : pinnedLocationAddress;
         const destination = toAutocomplete.getPlace();
         customerMarker.setVisible(false);
+
         let isAreaRestricted = [];
-        if (
-          origin &&
-          destination &&
-          currentAddress &&
-          currentLocation &&
-          mapRef.current
-        ) {
+        if (origin && destination && mapRef.current) {
           if (polygons && polygons.length > 0) {
             polygons.forEach((polygon) => {
               const Polygon = new window.google.maps.Polygon({
@@ -192,7 +206,6 @@ const Map = () => {
               Polygon.setMap(map);
               const originLocation = origin.geometry.location;
               const destinationLocation = destination.geometry.location;
-
               const isOriginRestricted =
                 !window.google.maps.geometry.poly.containsLocation(
                   originLocation,
@@ -208,7 +221,6 @@ const Map = () => {
               );
             });
           }
-          console.log(isAreaRestricted);
           if (!isAreaRestricted.includes(false)) {
             setIsLocationRestricted(true);
           } else {
@@ -219,24 +231,13 @@ const Map = () => {
               travelMode: window.google.maps.TravelMode.DRIVING,
             };
 
-            // Get the route and display it on the map
             directionsService.route(request, (result, status) => {
               if (status === window.google.maps.DirectionsStatus.OK) {
                 directionsRenderer.setDirections(result);
               }
             });
-
-            // Create the destination marker with the SVG icon
-            new window.google.maps.Marker({
-              position: destination.geometry.location,
-              map: map,
-              icon: {
-                url: destinationIconUrl,
-                scaledSize: new window.google.maps.Size(40, 40),
-              },
-            });
-
-            // Calculate the distance between the origin and destination
+            destinationMarker.setPosition(destination.geometry.location);
+            destinationMarker.setVisible(true);
             const distanceService =
               new window.google.maps.DistanceMatrixService();
             distanceService.getDistanceMatrix(
@@ -269,7 +270,7 @@ const Map = () => {
       fromAutocomplete.addListener("place_changed", calculateRoute);
       toAutocomplete.addListener("place_changed", calculateRoute);
     }
-  }, [isLightTheme, currentLocation, currentAddress, mapRef.current]);
+  }, [isLightTheme, currentLocation, mapRef.current, fromInputRef.current]);
 
   useEffect(() => {
     if (socket) {
@@ -280,8 +281,30 @@ const Map = () => {
         dispatch(closeModal());
         setDriversLocation(driver.location);
       });
+
+      socket.on("online-drivers", (onlineDrivers) => {
+        console.log(onlineDrivers);
+        if (mapInstance) {
+          onlineDrivers.forEach(({ location }) => {
+            console.log("Driver Location:", {
+              lat: location.lat,
+              lng: location.lng,
+            });
+            new window.google.maps.Marker({
+              position: { lat: location.lat, lng: location.lng },
+              map: mapInstance,
+              icon: {
+                url: driversCarIconUrl,
+                scaledSize: new window.google.maps.Size(40, 40),
+              },
+            });
+          });
+        } else {
+          console.log("Map instance not available.");
+        }
+      });
     }
-  }, [socket]);
+  }, [socket, mapInstance]);
 
   if (isLoading && !user) {
     document.body.classList.add("loading-indicator");

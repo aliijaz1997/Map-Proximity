@@ -36,7 +36,16 @@ const pinLocationIcon = `<svg width="800px" fill="#4080bf" height="800px" viewBo
 </g>
 </svg>`;
 
-// Create marker icons for driver and customer
+const driversCarIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30" id="car">
+<circle cx="12.5" cy="13.5" r="13" fill="green"/>
+<circle cx="12" cy="12" r="11" fill="black"/>
+<g fill="white">
+  <path d="M19,9.5h-.32L17.43,6.38A3,3,0,0,0,14.65,4.5h-6A3,3,0,0,0,5.7,6.91L5.18,9.5H5a3,3,0,0,0-3,3v3a1,1,0,0,0,1,1H4a3,3,0,0,0,6,0h4a3,3,0,0,0,6,0h1a1,1,0,0,0,1-1v-3A3,3,0,0,0,19,9.5Zm-6-3h1.65a1,1,0,0,1,.92.63l.95,2.37H13Zm-5.34.8a1,1,0,0,1,1-.8H11v3H7.22ZM7,17.5a1,1,0,1,1,1-1A1,1,0,0,1,7,17.5Zm10,0a1,1,0,1,1,1-1A1,1,0,0,1,17,17.5Zm3-3h-.78a3,3,0,0,0-4.44,0H9.22a3,3,0,0,0-4.44,0H4v-2a1,1,0,0,1,1-1H19a1,1,0,0,1,1,1Z"></path>
+</g>
+</svg>
+
+`;
+
 export const destinationIconUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
   destinationIcon
 )}`;
@@ -45,4 +54,7 @@ export const personIconUrl = `data:image/svg+xml;charset=UTF-8,${encodeURICompon
 )}`;
 export const pinLocationIconUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
   pinLocationIcon
+)}`;
+export const driversCarIconUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+  driversCarIcon
 )}`;

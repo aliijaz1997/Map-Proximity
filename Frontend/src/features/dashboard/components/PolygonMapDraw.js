@@ -11,8 +11,10 @@ import { useDispatch } from "react-redux";
 const MapWithPolygonDrawing = () => {
   const [drawnPolygons, setDrawnPolygons] = useState([]);
   const [currentLocation, setCurrentLocation] = useState(null);
+  const [mapInstance, setMapInstance] = useState(null);
 
   const mapRef = useRef(null);
+  const drawingManagerRef = useRef(null);
 
   const { data: locations, isLoading } = useGetLocationQuery();
   const [addOrUpdateLocation, { isLoading: isAdding, isSuccess: isAdded }] =
@@ -39,62 +41,78 @@ const MapWithPolygonDrawing = () => {
   }, []);
 
   useEffect(() => {
-    const mapOptions = {
-      center: {
-        lat: 30.3753, //currentLocation?.lat || 30.3753,
-        lng: 69.3451, //currentLocation?.lng || 69.3451,
-      },
-      zoom: 9,
-    };
-    const map = new window.google.maps.Map(mapRef.current, mapOptions);
+    console.log(4);
+    if (currentLocation) {
+      console.log(5);
+      const mapOptions = {
+        center: currentLocation,
+        zoom: 9,
+      };
+      const map = new window.google.maps.Map(mapRef.current, mapOptions);
+      setMapInstance(map);
 
-    if (locations && locations.length > 0) {
-      locations.forEach((location) => {
-        const Polygon = new window.google.maps.Polygon({
-          paths: [...location.path],
-          editable: true,
-        });
+      const drawingManager = new window.google.maps.drawing.DrawingManager({
+        drawingMode: null,
+        drawingControl: true,
+        drawingControlOptions: {
+          position: window.google.maps.ControlPosition.TOP_CENTER,
+          drawingModes: [window.google.maps.drawing.OverlayType.POLYGON],
+        },
+      });
 
-        Polygon.setMap(map);
+      drawingManagerRef.current = drawingManager;
+
+      map.addListener("click", () => {
+        if (drawingManagerRef.current) {
+          drawingManagerRef.current.setDrawingMode(null);
+        }
       });
     }
+  }, [currentLocation]);
 
-    const drawingManager = new window.google.maps.drawing.DrawingManager({
-      drawingMode: null,
-      drawingControl: true,
-      drawingControlOptions: {
-        position: window.google.maps.ControlPosition.TOP_CENTER,
-        drawingModes: [window.google.maps.drawing.OverlayType.POLYGON],
-      },
-      polygonOptions: {
-        editable: true,
-      },
-    });
+  useEffect(() => {
+    console.log("1");
+    if (mapInstance) {
+      console.log("2");
+      if (locations && locations.length > 0) {
+        console.log("3");
+        locations.forEach((location) => {
+          const Polygon = new window.google.maps.Polygon({
+            paths: [...location.path],
+            editable: true,
+          });
 
-    window.google.maps.event.addListener(
-      drawingManager,
-      "overlaycomplete",
-      (event) => {
-        if (event.type === window.google.maps.drawing.OverlayType.POLYGON) {
-          const newPolygon = event.overlay;
-          const path = newPolygon
-            .getPath()
-            .getArray()
-            .map((latLng) => ({
-              lat: latLng.lat(),
-              lng: latLng.lng(),
-            }));
-
-          setDrawnPolygons((prevPolygons) => [
-            ...prevPolygons,
-            { path, polygon: newPolygon },
-          ]);
-        }
+          Polygon.setMap(mapInstance);
+        });
       }
-    );
 
-    drawingManager.setMap(map);
-  }, [locations, currentLocation?.lat, currentLocation?.lng]);
+      const drawingManager = drawingManagerRef.current;
+
+      window.google.maps.event.addListener(
+        drawingManager,
+        "overlaycomplete",
+        (event) => {
+          if (event.type === window.google.maps.drawing.OverlayType.POLYGON) {
+            const newPolygon = event.overlay;
+            const path = newPolygon
+              .getPath()
+              .getArray()
+              .map((latLng) => ({
+                lat: latLng.lat(),
+                lng: latLng.lng(),
+              }));
+
+            setDrawnPolygons((prevPolygons) => [
+              ...prevPolygons,
+              { path, polygon: newPolygon },
+            ]);
+          }
+        }
+      );
+
+      drawingManager.setMap(mapInstance);
+    }
+  }, [mapInstance, locations]);
 
   useEffect(() => {
     if (isAdded) {
@@ -111,7 +129,7 @@ const MapWithPolygonDrawing = () => {
       document.body.classList.remove("loading-indicator");
       dispatch(
         showNotification({
-          message: "All locations has been deleted!",
+          message: "All locations have been deleted!",
           status: 1,
         })
       );
@@ -132,14 +150,14 @@ const MapWithPolygonDrawing = () => {
 
     setDrawnPolygons([]);
   };
+
   const deleteAllPolygons = () => {
     deleteAllLocations();
   };
 
   if (isLoading || isAdding || isDeleting) {
     document.body.classList.add("loading-indicator");
-  }
-  if (!isLoading || !isAdding || !isDeleting) {
+  } else {
     document.body.classList.remove("loading-indicator");
   }
 
@@ -162,7 +180,7 @@ const MapWithPolygonDrawing = () => {
           Update Drawn Polygons
         </button>
         <button
-          disabled={locations && locations.length < 1}
+          disabled={!locations || locations.length < 1}
           className="btn btn-error"
           onClick={deleteAllPolygons}
         >

@@ -68,6 +68,7 @@ function Header() {
           name: user.firstName,
           phoneNumber: user.phoneNumber,
           online: isOnline,
+          location: user.location,
         });
       }
       if (user.role === "customer") {
@@ -112,7 +113,7 @@ function Header() {
   }, [isOnline, updateUser]);
 
   if (isLoading && !user) {
-    document.body.classList.add("loading-indicator");
+    return document.body.classList.add("loading-indicator");
   }
   if (!isLoading && user) {
     document.body.classList.remove("loading-indicator");

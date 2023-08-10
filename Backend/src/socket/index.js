@@ -26,12 +26,13 @@ module.exports = (server) => {
   });
 
   io.on("connection", async (socket) => {
-    socket.on("add-driver", async ({ phoneNumber, online, name }) => {
+    socket.on("add-driver", async ({ phoneNumber, online, name, location }) => {
       const driver = {
         phoneNumber,
         online,
         name,
         socketId: socket.id,
+        location,
       };
       await redisClient.hSet(
         "onlineDrivers",
@@ -49,6 +50,12 @@ module.exports = (server) => {
             }
           })
           .filter(Boolean);
+      }
+      if (totalCustomers && Object.values(totalCustomers).length > 0) {
+        Object.values(totalCustomers).forEach((customer) => {
+          const { socketId } = JSON.parse(customer);
+          io.to(socketId).emit("online-drivers", availableDrivers);
+        });
       }
       console.log("Total Drivers Available", totalDrivers);
     });
@@ -81,7 +88,6 @@ module.exports = (server) => {
           const selectedDriver = availableDrivers.shift();
           console.log("Selected driver:", selectedDriver);
 
-          // Emit ride request to the selected driver
           io.to(selectedDriver.socketId).emit("driver-ride-request", {
             rideInformation,
             currentAddress,
@@ -89,7 +95,7 @@ module.exports = (server) => {
             rideId,
           });
 
-          const timerDuration = 15; // in seconds
+          const timerDuration = 15;
 
           const startTimer = (driver) => {
             let remainingTime = timerDuration;
@@ -105,7 +111,6 @@ module.exports = (server) => {
                   const nextDriver = availableDrivers.shift();
                   console.log("Next driver:", nextDriver);
                   if (nextDriver) {
-                    // Emit ride request to the next driver
                     io.to(nextDriver.socketId).emit("driver-ride-request", {
                       rideInformation,
                       currentAddress,
@@ -115,14 +120,12 @@ module.exports = (server) => {
 
                     startTimer(nextDriver);
                   } else {
-                    // No available drivers, send response to the customer
                     io.to(customer.socketId).emit("no-ride-found", {
                       message:
                         "Sorry, currently there are no drivers available. Please try later",
                     });
                   }
                 } else {
-                  // No available drivers, send response to the customer
                   io.to(customer.socketId).emit("no-ride-found", {
                     message:
                       "Sorry, currently there are no drivers available. Please try later",
@@ -133,12 +136,11 @@ module.exports = (server) => {
               io.to(driver.socketId).emit("timer-update", {
                 time: remainingTime,
               });
-            }, 1000); // run every second
+            }, 1000);
           };
 
           startTimer(selectedDriver);
         } else {
-          // No available drivers, send response to the customer
           io.to(customer.socketId).emit("ride-response", {
             message: "No drivers available",
           });
@@ -166,7 +168,6 @@ module.exports = (server) => {
           currentTimerId = null;
         }
 
-        // // Send response to the customer that the ride is accepted
         io.to(customer.socketId).emit("driver-assign", {
           customer: customerData,
           driver: driverObj,
