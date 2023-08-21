@@ -1,15 +1,18 @@
 import React, { useRef, useEffect, useState } from "react";
 import TitleCard from "../../../components/Cards/TitleCard";
+
 import {
   useDeleteLocationMutation,
   useGetLocationQuery,
   useUpdateLocationMutation,
 } from "../../../app/service/api";
+
 import { showNotification } from "../../common/headerSlice";
 import { useDispatch } from "react-redux";
 
 const MapWithPolygonDrawing = () => {
   const [drawnPolygons, setDrawnPolygons] = useState([]);
+  const [polygonInstance, setPolygonsInstance] = useState([]);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [mapInstance, setMapInstance] = useState(null);
 
@@ -17,6 +20,7 @@ const MapWithPolygonDrawing = () => {
   const drawingManagerRef = useRef(null);
 
   const { data: locations, isLoading } = useGetLocationQuery();
+
   const [addOrUpdateLocation, { isLoading: isAdding, isSuccess: isAdded }] =
     useUpdateLocationMutation();
   const [deleteAllLocations, { isLoading: isDeleting, isSuccess: isDeleted }] =
@@ -41,9 +45,7 @@ const MapWithPolygonDrawing = () => {
   }, []);
 
   useEffect(() => {
-    console.log(4);
     if (currentLocation) {
-      console.log(5);
       const mapOptions = {
         center: currentLocation,
         zoom: 9,
@@ -69,23 +71,18 @@ const MapWithPolygonDrawing = () => {
       });
     }
   }, [currentLocation]);
-
   useEffect(() => {
-    console.log("1");
     if (mapInstance) {
-      console.log("2");
       if (locations && locations.length > 0) {
-        console.log("3");
-        locations.forEach((location) => {
-          const Polygon = new window.google.maps.Polygon({
+        const newPolygons = locations.map((location) => {
+          const polygon = new window.google.maps.Polygon({
             paths: [...location.path],
-            editable: true,
           });
-
-          Polygon.setMap(mapInstance);
+          polygon.setMap(mapInstance);
+          return polygon;
         });
+        setPolygonsInstance(newPolygons);
       }
-
       const drawingManager = drawingManagerRef.current;
 
       window.google.maps.event.addListener(
@@ -101,7 +98,7 @@ const MapWithPolygonDrawing = () => {
                 lat: latLng.lat(),
                 lng: latLng.lng(),
               }));
-
+            console.log(path, "kjgkhkl");
             setDrawnPolygons((prevPolygons) => [
               ...prevPolygons,
               { path, polygon: newPolygon },
@@ -127,6 +124,7 @@ const MapWithPolygonDrawing = () => {
 
     if (isDeleted) {
       document.body.classList.remove("loading-indicator");
+
       dispatch(
         showNotification({
           message: "All locations have been deleted!",
@@ -135,7 +133,7 @@ const MapWithPolygonDrawing = () => {
       );
     }
   }, [isAdded, isDeleted]);
-
+  console.log(locations, drawnPolygons, polygonInstance);
   const clearDrawnPolygons = () => {
     drawnPolygons.forEach(({ polygon }) => {
       polygon.setMap(null);
@@ -144,15 +142,24 @@ const MapWithPolygonDrawing = () => {
   };
 
   const updatePolygon = () => {
-    drawnPolygons.forEach(async ({ path }) => {
+    drawnPolygons.forEach(async ({ path, polygon }) => {
       await addOrUpdateLocation(path);
+      polygon.setMap(null);
     });
 
+    drawingManagerRef.current.setDrawingMode(null);
     setDrawnPolygons([]);
   };
 
-  const deleteAllPolygons = () => {
-    deleteAllLocations();
+  const deleteAllPolygons = async () => {
+    drawnPolygons.forEach(({ polygon }) => {
+      polygon.setMap(null);
+    });
+    polygonInstance.forEach((polygon) => {
+      polygon.setMap(null);
+    });
+    setPolygonsInstance([]);
+    await deleteAllLocations();
   };
 
   if (isLoading || isAdding || isDeleting) {
