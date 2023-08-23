@@ -9,6 +9,7 @@ const Customers = lazy(() => import("../pages/protected/Customers"));
 const Drivers = lazy(() => import("../pages/protected/Drivers"));
 const Users = lazy(() => import("../pages/protected/Users"));
 const Service = lazy(() => import("../pages/protected/Service"));
+const Rides = lazy(() => import("../pages/protected/Rides"));
 const ProfileSettings = lazy(() =>
   import("../pages/protected/ProfileSettings")
 );
@@ -33,6 +34,10 @@ const routes = [
   {
     path: "/service",
     component: Service,
+  },
+  {
+    path: "/rides",
+    component: Rides,
   },
   {
     path: "/settings-profile",

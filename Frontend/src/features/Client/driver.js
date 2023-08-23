@@ -112,7 +112,7 @@ export default function DriverClient() {
                     body: {
                       _id: customerInfo.rideId,
                       status: "accepted",
-                      customerAddress: customerInfo.customer.location,
+                      customerAddress: customerInfo.currentAddress,
                       customer: {
                         _id: customerInfo.customer._id,
                         name: customerInfo.customer.firstName,

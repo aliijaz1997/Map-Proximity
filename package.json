@@ -4,8 +4,9 @@
   "description": "A wonderful digital experience using google maps.",
   "main": "index.js",
   "scripts": {
-    "backend": "npm start --prefix backend",
-    "frontend": "npm start --prefix frontend",
+    "backend": "npm start --prefix Backend",
+    "frontend": "npm start --prefix Frontend",
+    "install": "cd backend && yarn && cd frontend && yarn",
     "watch": "concurrently \"npm run backend\" \"npm run frontend\""
   },
   "author": "",

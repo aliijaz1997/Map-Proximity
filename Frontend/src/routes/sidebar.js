@@ -6,6 +6,7 @@ import TruckIcon from "@heroicons/react/24/outline/TruckIcon";
 import CustomersIcon from "@heroicons/react/24/outline/UserGroupIcon";
 import UsersIcon from "@heroicons/react/24/outline/UsersIcon";
 import ServiceIcon from "@heroicons/react/24/outline/ServerIcon";
+import CircleStackIcon from "@heroicons/react/24/outline/CircleStackIcon";
 
 const iconClasses = `h-6 w-6`;
 const submenuIconClasses = `h-5 w-5`;
@@ -35,6 +36,11 @@ const routes = [
     path: "/service", // url
     icon: <ServiceIcon className={iconClasses} />, // icon component
     name: "Service Area", // name that appear in Sidebar
+  },
+  {
+    path: "/rides", // url
+    icon: <CircleStackIcon className={iconClasses} />, // icon component
+    name: "Rides Data", // name that appear in Sidebar
   },
   {
     path: "", //no url needed as this has submenu

@@ -26,6 +26,14 @@ export const api = createApi({
       },
       providesTags: ["Location"],
     }),
+    getAllRides: builder.query({
+      query: () => {
+        return {
+          url: "ride",
+          method: "GET",
+        };
+      },
+    }),
     getUserById: builder.query({
       query: ({ id }) => {
         return {
@@ -93,4 +101,5 @@ export const {
   useUpdateLocationMutation,
   useDeleteLocationMutation,
   useUpdateRideMutation,
+  useGetAllRidesQuery,
 } = api;
