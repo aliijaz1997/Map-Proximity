@@ -28,6 +28,29 @@ const MapWithPolygonDrawing = () => {
 
   const dispatch = useDispatch();
 
+  const handleOverlayComplete = (event) => {
+    if (event.type === window.google.maps.drawing.OverlayType.POLYGON) {
+      const newPolygon = event.overlay;
+
+      const path = newPolygon
+        .getPath()
+        .getArray()
+        .map((latLng) => ({
+          lat: latLng.lat(),
+          lng: latLng.lng(),
+        }));
+
+      setDrawnPolygons((prevPolygons) => [
+        ...prevPolygons,
+        { path, polygon: newPolygon },
+      ]);
+
+      if (drawingManagerRef.current) {
+        drawingManagerRef.current.setDrawingMode(null);
+      }
+    }
+  };
+
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -85,26 +108,11 @@ const MapWithPolygonDrawing = () => {
       }
       const drawingManager = drawingManagerRef.current;
 
+      window.google.maps.event.removeListener(drawingManager.overlaycomplete);
       window.google.maps.event.addListener(
         drawingManager,
         "overlaycomplete",
-        (event) => {
-          if (event.type === window.google.maps.drawing.OverlayType.POLYGON) {
-            const newPolygon = event.overlay;
-            const path = newPolygon
-              .getPath()
-              .getArray()
-              .map((latLng) => ({
-                lat: latLng.lat(),
-                lng: latLng.lng(),
-              }));
-            console.log(path, "kjgkhkl");
-            setDrawnPolygons((prevPolygons) => [
-              ...prevPolygons,
-              { path, polygon: newPolygon },
-            ]);
-          }
-        }
+        handleOverlayComplete
       );
 
       drawingManager.setMap(mapInstance);
@@ -133,7 +141,7 @@ const MapWithPolygonDrawing = () => {
       );
     }
   }, [isAdded, isDeleted]);
-  console.log(locations, drawnPolygons, polygonInstance);
+
   const clearDrawnPolygons = () => {
     drawnPolygons.forEach(({ polygon }) => {
       polygon.setMap(null);
@@ -144,7 +152,6 @@ const MapWithPolygonDrawing = () => {
   const updatePolygon = () => {
     drawnPolygons.forEach(async ({ path, polygon }) => {
       await addOrUpdateLocation(path);
-      polygon.setMap(null);
     });
 
     drawingManagerRef.current.setDrawingMode(null);

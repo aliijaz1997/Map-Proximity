@@ -101,19 +101,21 @@ const Map = () => {
   }, []);
 
   useEffect(() => {
-    const map = new window.google.maps.Map(mapRef.current, {
-      center: currentLocation,
-      zoom: 18,
-      styles: isLightTheme ? null : getMapStyles(),
-      disableDefaultUI: true,
-      zoomControl: false,
-      mapTypeControlOptions: {
-        mapTypeIds: ["roadmap", "styled_map"],
-      },
-    });
+    if (currentLocation) {
+      const map = new window.google.maps.Map(mapRef.current, {
+        center: currentLocation,
+        zoom: 18,
+        styles: isLightTheme ? null : getMapStyles(),
+        disableDefaultUI: true,
+        zoomControl: false,
+        mapTypeControlOptions: {
+          mapTypeIds: ["roadmap", "styled_map"],
+        },
+      });
 
-    setMapInstance(map);
-  }, []);
+      setMapInstance(map);
+    }
+  }, [currentLocation]);
   useEffect(() => {
     if (mapRef.current && mapInstance) {
       let directionsService;
@@ -192,7 +194,6 @@ const Map = () => {
           ? fromAutocomplete.getPlace()
           : pinnedLocationAddress;
         const destination = toAutocomplete.getPlace();
-        customerMarker.setVisible(false);
 
         let isAreaRestricted = [];
         if (origin && destination && mapRef.current) {
@@ -237,6 +238,7 @@ const Map = () => {
               }
             });
             destinationMarker.setPosition(destination.geometry.location);
+            customerMarker.setPosition(origin.geometry.location);
             destinationMarker.setVisible(true);
             const distanceService =
               new window.google.maps.DistanceMatrixService();
@@ -270,8 +272,15 @@ const Map = () => {
       fromAutocomplete.addListener("place_changed", calculateRoute);
       toAutocomplete.addListener("place_changed", calculateRoute);
     }
-  }, [isLightTheme, currentLocation, mapRef.current, fromInputRef.current]);
+  }, [
+    isLightTheme,
+    currentLocation,
+    mapRef.current,
+    fromInputRef.current,
+    polygons,
+  ]);
 
+  console.log(polygons);
   useEffect(() => {
     if (socket) {
       socket.on("no-ride-found", ({ message }) => {

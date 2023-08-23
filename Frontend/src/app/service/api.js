@@ -64,7 +64,7 @@ export const api = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Location"],
+      invalidatesTags: [""],
     }),
     deleteLocation: builder.mutation({
       query: () => ({
