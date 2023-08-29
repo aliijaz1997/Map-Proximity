@@ -34,9 +34,9 @@ export default function Rides() {
                   <td>{k + 1}</td>
                   <td>{moment(ride.createdAt).format("DD MMM YY")}</td>
                   <td>{ride.customer.name}</td>
-                  <td>{ride.customerAddress.address}</td>
+                  <td>{ride.customerAddress?.address}</td>
                   <td>{ride.driver.name}</td>
-                  <td>{ride.driverAddress.address}</td>
+                  <td>{ride.driverAddress?.address}</td>
                   <td>
                     {ride.status !== "completed" ? (
                       <div className="badge badge-error text-white">

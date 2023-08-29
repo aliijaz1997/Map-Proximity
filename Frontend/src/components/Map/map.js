@@ -105,7 +105,15 @@ const Map = () => {
       const map = new window.google.maps.Map(mapRef.current, {
         center: currentLocation,
         zoom: 18,
-        styles: isLightTheme ? null : getMapStyles(),
+        styles: isLightTheme
+          ? [
+              {
+                featureType: "poi",
+                elementType: "labels",
+                stylers: [{ visibility: "off" }],
+              },
+            ]
+          : getMapStyles(),
         disableDefaultUI: true,
         zoomControl: false,
         mapTypeControlOptions: {

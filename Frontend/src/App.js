@@ -23,10 +23,7 @@ initializeApp();
 
 function App() {
   const dispatch = useDispatch();
-  const { token, user } = useSelector((state) => state.auth);
-  const { data: dataBaseUser } = useGetUserByIdQuery({
-    id: user?.uid,
-  });
+  const { token } = useSelector((state) => state.auth);
 
   useEffect(() => {
     themeChange(false);
@@ -37,19 +34,19 @@ function App() {
       if (user) {
         user.getIdToken().then((token) => {
           dispatch(loginRedux(token));
-          dispatch(addUserRedux(user));
+          dispatch(
+            addUserRedux({
+              uid: user.uid,
+              displayName: user.displayName,
+              email: user.email,
+            })
+          );
         });
       }
     });
 
     return unsubscribe;
   }, []);
-
-  if (token && !dataBaseUser)
-    return document.body.classList.add("loading-indicator");
-
-  if (token && dataBaseUser)
-    document.body.classList.remove("loading-indicator");
 
   return (
     <>

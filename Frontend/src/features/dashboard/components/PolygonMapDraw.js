@@ -92,6 +92,12 @@ const MapWithPolygonDrawing = () => {
           drawingManagerRef.current.setDrawingMode(null);
         }
       });
+
+      window.google.maps.event.addListener(
+        drawingManager,
+        "overlaycomplete",
+        handleOverlayComplete
+      );
     }
   }, [currentLocation]);
   useEffect(() => {
@@ -107,13 +113,6 @@ const MapWithPolygonDrawing = () => {
         setPolygonsInstance(newPolygons);
       }
       const drawingManager = drawingManagerRef.current;
-
-      window.google.maps.event.removeListener(drawingManager.overlaycomplete);
-      window.google.maps.event.addListener(
-        drawingManager,
-        "overlaycomplete",
-        handleOverlayComplete
-      );
 
       drawingManager.setMap(mapInstance);
     }
@@ -174,6 +173,8 @@ const MapWithPolygonDrawing = () => {
   } else {
     document.body.classList.remove("loading-indicator");
   }
+
+  console.log(drawnPolygons, polygonInstance);
 
   return (
     <TitleCard title={"Draw polygon to select the area of operation"}>
