@@ -7,11 +7,6 @@ const rideSchema = new mongoose.Schema({
     enum: ["accepted", "started", "completed"],
     required: true,
   },
-  customerAddress: {
-    lat: { type: Number },
-    lng: { type: Number },
-    address: { type: String },
-  },
   customer: {
     _id: { type: String, required: true },
     name: { type: String, required: true },
@@ -20,10 +15,15 @@ const rideSchema = new mongoose.Schema({
     _id: { type: String, required: true },
     name: { type: String, required: true },
   },
-  driverAddress: {
-    lat: { type: Number },
-    lng: { type: Number },
-    address: { type: String },
+  rideInformation: {
+    destination: {
+      coordinates: { lat: { type: Number }, lng: { type: Number } },
+      address: { type: String },
+    },
+    origin: {
+      coordinates: { lat: { type: Number }, lng: { type: Number } },
+      address: { type: String },
+    },
   },
   createdAt: { type: Date, default: Date.now },
 });

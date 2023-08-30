@@ -268,7 +268,20 @@ const Map = () => {
                     distance,
                     duration,
                     fare: parseInt(distance) * 20 + 100,
-                    destinationAddress: destination.formatted_address,
+                    destination: {
+                      coordinates: {
+                        lat: destination.geometry.location.lat(),
+                        lng: destination.geometry.location.lng(),
+                      },
+                      address: destination.formatted_address,
+                    },
+                    origin: {
+                      coordinates: {
+                        lat: origin.geometry.location.lat(),
+                        lng: origin.geometry.location.lng(),
+                      },
+                      address: origin.formatted_address,
+                    },
                   });
                 }
               }

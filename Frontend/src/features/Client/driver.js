@@ -73,7 +73,7 @@ export default function DriverClient() {
   if (!isLoading && user) {
     document.body.classList.remove("loading-indicator");
   }
-
+  console.log(customerInfo);
   return (
     <div className=" dark:text-gray-300 flex justify-center items-center mt-8">
       The popup will appear when any customer will request the ride with in your
@@ -92,7 +92,9 @@ export default function DriverClient() {
             </div>
             <h2 className="text-xl font-bold mb-4">Request Details</h2>
             <p>Customer Name: {customerInfo?.customer?.firstName}</p>
-            <p>Location: {customerInfo?.currentAddress}</p>
+            <p>
+              Location: {customerInfo?.rideInformation?.destination.address}
+            </p>
             <p>Distance: {customerInfo?.rideInformation?.distance} km</p>
             <p>Phone Number: {customerInfo?.customer?.phoneNumber}</p>
             <p>Offered Price: {customerInfo?.rideInformation?.fare}</p>
@@ -112,7 +114,6 @@ export default function DriverClient() {
                     body: {
                       _id: customerInfo.rideId,
                       status: "accepted",
-                      customerAddress: customerInfo.currentAddress,
                       customer: {
                         _id: customerInfo.customer._id,
                         name: customerInfo.customer.firstName,
@@ -121,7 +122,7 @@ export default function DriverClient() {
                         _id: user._id,
                         name: user.firstName,
                       },
-                      driverAddress: user.location,
+                      rideInformation: customerInfo?.rideInformation,
                     },
                   });
                 }}
