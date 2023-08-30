@@ -18,6 +18,7 @@ const MapWithPolygonDrawing = () => {
 
   const mapRef = useRef(null);
   const drawingManagerRef = useRef(null);
+  const citySelectInputRef = useRef(null);
 
   const { data: locations, isLoading } = useGetLocationQuery();
 
@@ -71,7 +72,7 @@ const MapWithPolygonDrawing = () => {
     if (currentLocation) {
       const mapOptions = {
         center: currentLocation,
-        zoom: 9,
+        zoom: 11,
       };
       const map = new window.google.maps.Map(mapRef.current, mapOptions);
       setMapInstance(map);
@@ -100,6 +101,52 @@ const MapWithPolygonDrawing = () => {
       );
     }
   }, [currentLocation]);
+
+  useEffect(() => {
+    if (!mapInstance) return;
+    const cityAutoComplete = new window.google.maps.places.Autocomplete(
+      citySelectInputRef.current,
+      {
+        types: ["(cities)"],
+        componentRestrictions: { country: "pk" },
+      }
+    );
+
+    cityAutoComplete.addListener("place_changed", () => {
+      const place = cityAutoComplete.getPlace();
+      const geometry = place.geometry;
+      const coordinates = [
+        {
+          lat: geometry.viewport.getNorthEast().lat(),
+          lng: geometry.viewport.getNorthEast().lng(),
+        },
+        {
+          lat: geometry.viewport.getNorthEast().lat(),
+          lng: geometry.viewport.getSouthWest().lng(),
+        },
+        {
+          lat: geometry.viewport.getSouthWest().lat(),
+          lng: geometry.viewport.getSouthWest().lng(),
+        },
+        {
+          lat: geometry.viewport.getSouthWest().lat(),
+          lng: geometry.viewport.getNorthEast().lng(),
+        },
+      ];
+
+      const newCityPolygon = new window.google.maps.Polygon({
+        paths: coordinates,
+      });
+      newCityPolygon.setMap(mapInstance);
+      setDrawnPolygons((prevPolygons) => [
+        ...prevPolygons,
+        { path: coordinates, polygon: newCityPolygon },
+      ]);
+
+      mapInstance.fitBounds(geometry.viewport);
+    });
+  }, [citySelectInputRef.current, mapInstance]);
+
   useEffect(() => {
     if (mapInstance) {
       if (locations && locations.length > 0) {
@@ -174,35 +221,43 @@ const MapWithPolygonDrawing = () => {
     document.body.classList.remove("loading-indicator");
   }
 
-  console.log(drawnPolygons, polygonInstance);
-
   return (
-    <TitleCard title={"Draw polygon to select the area of operation"}>
-      <div ref={mapRef} style={{ width: "100%", height: 450 }}></div>
-      <div className="my-4 flex justify-around">
-        <button
-          disabled={drawnPolygons.length < 1}
-          className="btn btn-primary"
-          onClick={clearDrawnPolygons}
-        >
-          Clear Drawn Polygons
-        </button>
-        <button
-          disabled={drawnPolygons.length < 1}
-          className="btn btn-success"
-          onClick={updatePolygon}
-        >
-          Update Drawn Polygons
-        </button>
-        <button
-          disabled={!locations || locations.length < 1}
-          className="btn btn-error"
-          onClick={deleteAllPolygons}
-        >
-          Delete Drawn Polygons
-        </button>
+    <>
+      <div className="flex justify-center">
+        <input
+          className="appearance-none block text-gray-700 border  rounded py-3 px-4 leading-tight outline-none bg-white border-gray-500"
+          ref={citySelectInputRef}
+          placeholder="Select the city"
+          type="text"
+        />
       </div>
-    </TitleCard>
+      <TitleCard>
+        <div ref={mapRef} style={{ width: "100%", height: 450 }}></div>
+        <div className="my-4 flex justify-around">
+          <button
+            disabled={drawnPolygons.length < 1}
+            className="btn btn-primary"
+            onClick={clearDrawnPolygons}
+          >
+            Clear Drawn Polygons
+          </button>
+          <button
+            disabled={drawnPolygons.length < 1}
+            className="btn btn-success"
+            onClick={updatePolygon}
+          >
+            Update Drawn Polygons
+          </button>
+          <button
+            disabled={!locations || locations.length < 1}
+            className="btn btn-error"
+            onClick={deleteAllPolygons}
+          >
+            Delete Drawn Polygons
+          </button>
+        </div>
+      </TitleCard>
+    </>
   );
 };
 
