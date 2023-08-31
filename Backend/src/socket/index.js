@@ -1,7 +1,6 @@
 const { createClient } = require("redis");
 const { v4: uuidv4 } = require("uuid");
 
-const rideId = uuidv4();
 const redisClient = createClient(6379);
 let currentTimerId = null;
 let totalCustomers = null;
@@ -73,6 +72,7 @@ module.exports = (server) => {
     socket.on(
       "customer-ride-request",
       async ({ currentAddress, rideInformation, user }) => {
+        const rideId = uuidv4();
         const stringifiedCustomer = await redisClient.hGet(
           "onlineCustomers",
           user.phoneNumber

@@ -28,11 +28,16 @@ export default function Rides() {
               <th>Destination Address</th>
               <th>Ride Static Image</th>
               <th>Status</th>
+              <th>Rating</th>
             </tr>
           </thead>
           <tbody>
             {rides &&
               rides.map((ride, k) => {
+                const clampedRating = Math.min(Math.max(1, ride.rating), 5);
+                const filledStars = clampedRating;
+                const emptyStars = 5 - filledStars;
+
                 return (
                   <tr key={k}>
                     <td className="border p-3">{k + 1}</td>
@@ -63,6 +68,20 @@ export default function Rides() {
                           {ride.status.toUpperCase()}
                         </div>
                       )}
+                    </td>
+                    <td className="border p-3">
+                      <div className="flex space-x-1">
+                        {[...Array(filledStars)].map((_, index) => (
+                          <span key={index} className="text-yellow-400">
+                            ★
+                          </span>
+                        ))}
+                        {[...Array(emptyStars)].map((_, index) => (
+                          <span key={index} className="text-gray-300">
+                            ★
+                          </span>
+                        ))}
+                      </div>
                     </td>
                   </tr>
                 );

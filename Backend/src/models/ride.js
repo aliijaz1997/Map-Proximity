@@ -26,6 +26,7 @@ const rideSchema = new mongoose.Schema({
     },
   },
   createdAt: { type: Date, default: Date.now },
+  rating: { type: Number },
 });
 
 module.exports = mongoose.model("Ride", rideSchema);

@@ -1,41 +1,64 @@
 import React, { useEffect, useState } from "react";
+import { useUpdateRideMutation } from "../../app/service/api";
+import { showNotification } from "../../features/common/headerSlice";
 import { useDispatch } from "react-redux";
 
-export default function RideEndedModal({ closeModal }) {
-  const [seconds, setSeconds] = useState(5);
+export default function RideEndedModal({ closeModal, extraObject }) {
+  const [rating, setRating] = useState(null);
+
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      window.location.href = "/";
-    }, 5000);
+  const { driver, customerInfo } = extraObject;
+  const [updateRide, { isSuccess }] = useUpdateRideMutation();
 
-    const interval = setInterval(() => {
-      setSeconds((prev) => prev - 1);
-    }, 1000);
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timer);
-    };
-  }, []);
+  useEffect(() => {
+    if (isSuccess) {
+      dispatch(
+        showNotification({
+          message: "Thank you for giving rating!",
+          status: 1,
+        })
+      );
+      closeModal();
+      window.location.href = "/";
+    }
+  }, [isSuccess]);
+
+  const handleRatingClick = (value) => {
+    const ratingValue = parseInt(value);
+    setRating(ratingValue);
+
+    updateRide({
+      id: customerInfo.rideId,
+      body: { rating: ratingValue },
+    });
+  };
   return (
-    <div className="flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg ">
-        <p className="text-xl font-semibold mb-4">Ride Ended</p>
-        <p className="text-2xl">{seconds}</p>
-        <p className="text-gray-600 mb-8">
-          Press OK to book your next ride or the page will automatically be
-          redirected.
-        </p>
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          onClick={() => {
-            dispatch(closeModal());
-            window.location.href = "/";
-          }}
-        >
-          OK
-        </button>
+    <div className="">
+      <div className="flex flex-col items-center space-x-4">
+        <img
+          src={driver.imageUrl}
+          alt="profile picture"
+          className="w-28 h-28 rounded-full object-cover"
+        />
+        <div className="flex flex-col items-center">
+          <p className="text-3xl font-semibold">
+            {driver.firstName} {driver.lastName}
+          </p>
+          <div className="flex space-x-4 m-6">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <span
+                key={star}
+                className={`cursor-pointer ${
+                  rating >= star ? "text-yellow-400" : "text-gray-300"
+                } text-5xl`}
+                onClick={() => handleRatingClick(star)}
+              >
+                ★
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
