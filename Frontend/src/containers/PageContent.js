@@ -77,6 +77,7 @@ function PageContent() {
 
             {/* Redirecting unknown url to 404 page */}
             <Route path="/" exact element={<Navigate to="/dashboard" />} />
+            <Route path="login" exact element={<Navigate to="/dashboard" />} />
             <Route path="*" element={<Page404 />} />
           </Routes>
         </Suspense>
