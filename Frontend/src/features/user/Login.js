@@ -21,7 +21,7 @@ function Login() {
 
   const [addUser] = useAddUserMutation();
 
-  const { loading, user } = useSelector((state) => state.auth);
+  const { loading } = useSelector((state) => state.auth);
 
   const [errorMessage, setErrorMessage] = useState("");
   const [loginObj, setLoginObj] = useState(INITIAL_LOGIN_OBJ);

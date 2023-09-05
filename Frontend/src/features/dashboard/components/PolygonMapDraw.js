@@ -231,7 +231,13 @@ const MapWithPolygonDrawing = () => {
           type="text"
         />
       </div>
-      <TitleCard>
+      <TitleCard
+        title={
+          drawnPolygons.length > 0
+            ? `You have selected ${drawnPolygons.length} no. of places`
+            : ""
+        }
+      >
         <div ref={mapRef} style={{ width: "100%", height: 450 }}></div>
         <div className="my-4 flex justify-around">
           <button
@@ -239,7 +245,7 @@ const MapWithPolygonDrawing = () => {
             className="btn btn-primary"
             onClick={clearDrawnPolygons}
           >
-            Clear Drawn Polygons
+            Clear Drawn Polygons{" "}
           </button>
           <button
             disabled={drawnPolygons.length < 1}

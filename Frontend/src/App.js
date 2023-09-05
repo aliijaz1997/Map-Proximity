@@ -11,7 +11,6 @@ import initializeApp from "./app/init";
 import { useDispatch, useSelector } from "react-redux";
 import { auth } from "./utils/firebase";
 import { addUserRedux, loginRedux } from "./app/slices/authSlice";
-import { useGetUserByIdQuery } from "./app/service/api";
 
 // Importing pages
 const Layout = lazy(() => import("./containers/Layout"));
