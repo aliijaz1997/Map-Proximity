@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { openModal } from "../../features/common/modalSlice";
 import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 import { showNotification } from "../../features/common/headerSlice";
+import { driverLatLong } from "../../utils/map/fakeLatLngDriver";
 
 const driverIconSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="green" class="w-6 h-6">
@@ -29,6 +30,9 @@ const customerIconUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
 function DriverCustomerLocation({ locations, currentLocation, socket }) {
   const [driverLocation, setDriverLocation] = useState(null);
   const [customerLocation, setCustomerLocation] = useState(null);
+  const [mapInstance, setMapInstance] = useState(null);
+  const [isDriverLate, setIsDriverLate] = useState(false);
+
   const mapRef = useRef(null);
   const [driverMarker, setDriverMaker] = useState(null);
 
@@ -49,13 +53,20 @@ function DriverCustomerLocation({ locations, currentLocation, socket }) {
   useEffect(() => {
     const mapOptions = {
       center: currentLocation || { lat: 30.362, lng: 71.509 },
-      zoom: 14,
+      zoom: 18,
       disableDefaultUI: true,
       zoomControl: false,
+      styles: [
+        {
+          featureType: "poi",
+          elementType: "labels",
+          stylers: [{ visibility: "off" }],
+        },
+      ],
     };
 
     const map = new window.google.maps.Map(mapRef.current, mapOptions);
-
+    setMapInstance(map);
     const driverMarker = new window.google.maps.Marker({
       position: driverLocation,
       map,
@@ -84,26 +95,27 @@ function DriverCustomerLocation({ locations, currentLocation, socket }) {
   }, [socket]);
 
   useEffect(() => {
-    const locationArray = [
-      { lat: 30.362, lng: 71.509 },
-      { lat: 30.194553, lng: 71.477242 },
-      { lat: 30.200123, lng: 71.480987 },
-      { lat: 30.205432, lng: 71.483762 },
-      { lat: 30.210789, lng: 71.486512 },
-      { lat: 30.215987, lng: 71.489275 },
-      { lat: 30.4, lng: 71.6 },
-    ];
+    if (mapInstance) {
+      let index = driverLatLong.length - 1;
+      const timer = setInterval(() => {
+        if (index === 0) {
+          setIsDriverLate(true);
+          clearInterval(timer);
+          return;
+        }
+        const currentDriverLocation = driverLatLong[index];
 
-    const timer = setInterval(() => {
-      const randomIndex = Math.floor(Math.random() * locationArray.length);
-      const randomLocation = locationArray[randomIndex];
+        driverMarker.setPosition(currentDriverLocation);
+        const bounds = new window.google.maps.LatLngBounds();
+        bounds.extend(driverMarker.getPosition());
+        mapInstance.panToBounds(bounds, 160);
+        index--;
+      }, 700);
 
-      driverMarker.setPosition(randomLocation);
-    }, 5000);
-
-    return () => {
-      clearInterval(timer);
-    };
+      return () => {
+        clearInterval(timer);
+      };
+    }
   }, [driverMarker]);
 
   useEffect(() => {
@@ -132,7 +144,9 @@ function DriverCustomerLocation({ locations, currentLocation, socket }) {
   return (
     <div>
       <h1 className="text-orange-700 font-bold m-4 mb-8 text-lg">
-        Track the real-time location of you and your driver!
+        {isDriverLate
+          ? "Your driver is getting late try calling them!"
+          : "Track the real-time location of you and your driver!"}
       </h1>
       <div
         ref={mapRef}

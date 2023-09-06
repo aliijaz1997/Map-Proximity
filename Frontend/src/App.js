@@ -52,13 +52,14 @@ function App() {
       <Router>
         <Routes>
           {token ? (
-            <Route path="/*" element={<Layout />} />
+            <>
+              <Route path="/*" element={<Layout />} />
+            </>
           ) : (
             <>
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<Navigate to="/login" />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/*" exact element={<Navigate to="/login" />} />
             </>
           )}
         </Routes>

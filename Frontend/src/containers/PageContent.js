@@ -13,12 +13,13 @@ import SuspenseContent from "./SuspenseContent";
 import { useSelector } from "react-redux";
 import { useEffect, useRef } from "react";
 import { useGetUserByIdQuery } from "../app/service/api";
+import Loader from "../components/Loader/Loader";
 
 const Page404 = lazy(() => import("../pages/protected/404"));
 
 function PageContent() {
   const { user } = useSelector((state) => state.auth);
-  const { data: dataBaseUser } = useGetUserByIdQuery({
+  const { data: dataBaseUser, isLoading } = useGetUserByIdQuery({
     id: user?.uid,
   });
 
@@ -27,11 +28,15 @@ function PageContent() {
 
   // Scroll back to top on new page load
   useEffect(() => {
-    mainContentRef.current.scroll({
+    mainContentRef?.current?.scroll({
       top: 0,
       behavior: "smooth",
     });
   }, [pageTitle]);
+
+  if (isLoading && !dataBaseUser) {
+    return <Loader />;
+  }
 
   return (
     <div className="drawer-content flex flex-col ">
@@ -78,7 +83,7 @@ function PageContent() {
             {/* Redirecting unknown url to 404 page */}
             <Route path="/" exact element={<Navigate to="/dashboard" />} />
             <Route path="login" exact element={<Navigate to="/dashboard" />} />
-            <Route path="*" element={<Page404 />} />
+            <Route path="/*" element={<Page404 />} />
           </Routes>
         </Suspense>
         <div className="h-16"></div>

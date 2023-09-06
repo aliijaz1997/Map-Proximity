@@ -152,6 +152,7 @@ const Map = () => {
           latitude: newLocation.lat(),
           longitude: newLocation.lng(),
         });
+        console.log(newLocation.lat(), newLocation.lng());
         if (fromInputRef.current) {
           fromInputRef.current.value = address.formatted_address;
         }

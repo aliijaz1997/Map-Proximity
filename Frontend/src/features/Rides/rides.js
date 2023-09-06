@@ -13,7 +13,6 @@ export default function Rides() {
   if (!isLoading && rides) {
     document.body.classList.remove("loading-indicator");
   }
-  console.log(rides);
   return (
     <TitleCard title="Total Rides" topMargin="mt-2">
       <div>
@@ -35,8 +34,8 @@ export default function Rides() {
             {rides &&
               rides.map((ride, k) => {
                 const clampedRating = Math.min(Math.max(1, ride.rating), 5);
-                const filledStars = clampedRating;
-                const emptyStars = 5 - filledStars;
+                const filledStars = Math.floor(clampedRating);
+                const emptyStars = Math.floor(5 - filledStars);
 
                 return (
                   <tr key={k}>
@@ -71,12 +70,18 @@ export default function Rides() {
                     </td>
                     <td className="border p-3">
                       <div className="flex space-x-1">
-                        {[...Array(filledStars)].map((_, index) => (
-                          <span key={index} className="text-yellow-400">
-                            ★
-                          </span>
-                        ))}
-                        {[...Array(emptyStars)].map((_, index) => (
+                        {!ride.rating ? (
+                          <span className="text-sm">No ratings given yet</span>
+                        ) : (
+                          Array.from({ length: filledStars }).map(
+                            (_, index) => (
+                              <span key={index} className="text-yellow-400">
+                                ★
+                              </span>
+                            )
+                          )
+                        )}
+                        {Array.from({ length: emptyStars }).map((_, index) => (
                           <span key={index} className="text-gray-300">
                             ★
                           </span>
