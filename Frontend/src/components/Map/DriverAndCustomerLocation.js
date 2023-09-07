@@ -4,6 +4,7 @@ import { openModal } from "../../features/common/modalSlice";
 import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 import { showNotification } from "../../features/common/headerSlice";
 import { driverLatLong } from "../../utils/map/fakeLatLngDriver";
+import CountdownTimer from "./CountDownTimer";
 
 const driverIconSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="green" class="w-6 h-6">
@@ -32,6 +33,11 @@ function DriverCustomerLocation({ locations, currentLocation, socket }) {
   const [customerLocation, setCustomerLocation] = useState(null);
   const [mapInstance, setMapInstance] = useState(null);
   const [isDriverLate, setIsDriverLate] = useState(false);
+  const [routeDetails, setRouteDetails] = useState({
+    distance: "",
+    duration: "",
+    routeCoordinates: [],
+  });
 
   const mapRef = useRef(null);
   const [driverMarker, setDriverMaker] = useState(null);
@@ -53,7 +59,7 @@ function DriverCustomerLocation({ locations, currentLocation, socket }) {
   useEffect(() => {
     const mapOptions = {
       center: currentLocation || { lat: 30.362, lng: 71.509 },
-      zoom: 18,
+      zoom: 17,
       disableDefaultUI: true,
       zoomControl: false,
       styles: [
@@ -87,36 +93,76 @@ function DriverCustomerLocation({ locations, currentLocation, socket }) {
 
     setDriverMaker(driverMarker);
 
-    // Clean up on component unmount
+    const directionsService = new window.google.maps.DirectionsService();
+    const directionsRenderer = new window.google.maps.DirectionsRenderer({
+      suppressMarkers: true,
+      map,
+    });
+    if (driverLocation && customerLocation && directionsService) {
+      // Calculate route between driver and customer
+      const request = {
+        origin: new window.google.maps.LatLng(
+          30.239901740152217,
+          71.49739636474303
+        ),
+        destination: new window.google.maps.LatLng(
+          customerLocation.lat,
+          customerLocation.lng
+        ),
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      };
+
+      directionsService.route(request, (response, status) => {
+        if (status === window.google.maps.DirectionsStatus.OK) {
+          directionsRenderer.setDirections(response);
+
+          const route = response.routes[0];
+          const { duration, distance } = route.legs[0];
+          const routeCoordinates = route.overview_path.map((coordinate) => {
+            return { lat: coordinate.lat(), lng: coordinate.lng() };
+          });
+
+          setRouteDetails({
+            distance: distance.text,
+            duration: duration.text,
+            routeCoordinates,
+          });
+        } else {
+          console.error("Error fetching directions:", status);
+        }
+      });
+    }
+
     return () => {
       driverMarker.setMap(null);
       customerMarker.setMap(null);
     };
-  }, [socket]);
+  }, [driverLocation, customerLocation]);
 
   useEffect(() => {
-    if (mapInstance) {
-      let index = driverLatLong.length - 1;
+    if (mapInstance && routeDetails.routeCoordinates.length > 0) {
+      const { routeCoordinates } = routeDetails;
+      let index = 0;
       const timer = setInterval(() => {
-        if (index === 0) {
+        if (index === routeCoordinates.length - 1) {
           setIsDriverLate(true);
           clearInterval(timer);
           return;
         }
-        const currentDriverLocation = driverLatLong[index];
+        const currentDriverLocation = routeCoordinates[index];
 
         driverMarker.setPosition(currentDriverLocation);
         const bounds = new window.google.maps.LatLngBounds();
         bounds.extend(driverMarker.getPosition());
         mapInstance.panToBounds(bounds, 160);
-        index--;
-      }, 700);
+        index++;
+      }, 900);
 
       return () => {
         clearInterval(timer);
       };
     }
-  }, [driverMarker]);
+  }, [driverMarker, routeDetails.routeCoordinates.length]);
 
   useEffect(() => {
     socket.on("ride-start", ({ customerInfo, driver }) => {
@@ -143,11 +189,26 @@ function DriverCustomerLocation({ locations, currentLocation, socket }) {
 
   return (
     <div>
-      <h1 className="text-orange-700 font-bold m-4 mb-8 text-lg">
-        {isDriverLate
-          ? "Your driver is getting late try calling them!"
-          : "Track the real-time location of you and your driver!"}
+      <h1 className="text-blue-700 font-bold m-4 mb-8 text-lg">
+        {isDriverLate ? (
+          <span className="text-red-600">
+            Your driver is getting late try calling them!
+          </span>
+        ) : (
+          <span>Track the real-time location of you and your driver!</span>
+        )}
       </h1>
+      {routeDetails.duration && (
+        <div className="flex justify-between">
+          <div className="bg-base-100 shadow-xl m-6 p-6 text-yellow-700 font-semibold rounded-md">
+            The distance between you and your driver is{" "}
+            <span className="text-black font-bold text-lg">
+              {routeDetails.distance}
+            </span>
+          </div>
+          <CountdownTimer durationText={routeDetails.duration} />
+        </div>
+      )}
       <div
         ref={mapRef}
         style={{

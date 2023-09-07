@@ -9,6 +9,7 @@ import {
 
 import { showNotification } from "../../common/headerSlice";
 import { useDispatch } from "react-redux";
+import InputText from "../../../components/Input/InputText";
 
 const MapWithPolygonDrawing = () => {
   const [drawnPolygons, setDrawnPolygons] = useState([]);
@@ -112,7 +113,7 @@ const MapWithPolygonDrawing = () => {
       }
     );
 
-    cityAutoComplete.addListener("place_changed", () => {
+    cityAutoComplete.addListener("place_changed", async () => {
       const place = cityAutoComplete.getPlace();
       const geometry = place.geometry;
       const coordinates = [
@@ -133,6 +134,14 @@ const MapWithPolygonDrawing = () => {
           lng: geometry.viewport.getNorthEast().lng(),
         },
       ];
+
+      // const response = await fetch(
+      //   `https://nominatim.openstreetmap.org/search.php?q=${place.name}&polygon_geojson=1&format=json`
+      // );
+      // if (response.ok) {
+      //   const data = await response.json();
+      //   console.log(data[1]);
+      // }
 
       const newCityPolygon = new window.google.maps.Polygon({
         paths: coordinates,
@@ -224,11 +233,11 @@ const MapWithPolygonDrawing = () => {
   return (
     <>
       <div className="flex justify-center">
-        <input
-          className="appearance-none block text-gray-700 border  rounded py-3 px-4 leading-tight outline-none bg-white border-gray-500"
-          ref={citySelectInputRef}
-          placeholder="Select the city"
+        <InputText
+          updateFormValue={() => {}}
+          labelTitle="Select City"
           type="text"
+          ref={citySelectInputRef}
         />
       </div>
       <TitleCard
