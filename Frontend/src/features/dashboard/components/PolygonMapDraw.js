@@ -135,14 +135,6 @@ const MapWithPolygonDrawing = () => {
         },
       ];
 
-      // const response = await fetch(
-      //   `https://nominatim.openstreetmap.org/search.php?q=${place.name}&polygon_geojson=1&format=json`
-      // );
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   console.log(data[1]);
-      // }
-
       const newCityPolygon = new window.google.maps.Polygon({
         paths: coordinates,
       });
