@@ -1,4 +1,4 @@
-# Ride App
+# Ride App (React & Google Maps Javascript API ![Google Maps](https://img.shields.io/badge/Google%20Maps-View%20on%20Google%20Maps-green?style=flat-square&logo=google-maps&logoColor=red))
 - ![React](https://img.shields.io/badge/-React-blue?style=flat-square&logo=react)
 - ![Tailwind CSS](https://img.shields.io/badge/-Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css)
 - ![Redux Toolkit](https://img.shields.io/badge/-Redux_Toolkit-764ABC?style=flat-square&logo=redux)
