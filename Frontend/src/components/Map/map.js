@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useState } from "react";
 import { getMapStyles } from "./Styles";
-import socket from "../../utils/socket";
 import {
   useGetLocationQuery,
   useGetUserByIdQuery,
+  useTriggerEventsMutation,
 } from "../../app/service/api";
 import { useDispatch, useSelector } from "react-redux";
 import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
@@ -17,6 +17,8 @@ import {
   personIconUrl,
   pinLocationIconUrl,
 } from "../../utils/icons";
+import { PusherInstance } from "../../utils/pusher/default";
+import uuid from "react-uuid";
 
 const Map = () => {
   const [currentLocation, setCurrentLocation] = useState(null);
@@ -38,6 +40,8 @@ const Map = () => {
   });
   const { data: polygons, isLoading: isLocationLoading } =
     useGetLocationQuery();
+  const [triggerEvent] = useTriggerEventsMutation();
+
   const dispatch = useDispatch();
 
   const mapRef = useRef(null);
@@ -304,38 +308,13 @@ const Map = () => {
 
   console.log(polygons);
   useEffect(() => {
-    if (socket) {
-      socket.on("no-ride-found", ({ message }) => {
-        openNoFoundRideModal(message);
-      });
-      socket.on("driver-assign", ({ customer, driver }) => {
-        dispatch(closeModal());
-        setDriversLocation(driver.location);
-      });
+    const customerChannel = PusherInstance.subscribe("ride");
 
-      socket.on("online-drivers", (onlineDrivers) => {
-        console.log(onlineDrivers);
-        if (mapInstance) {
-          onlineDrivers.forEach(({ location }) => {
-            console.log("Driver Location:", {
-              lat: location.lat,
-              lng: location.lng,
-            });
-            new window.google.maps.Marker({
-              position: { lat: location.lat, lng: location.lng },
-              map: mapInstance,
-              icon: {
-                url: driversCarIconUrl,
-                scaledSize: new window.google.maps.Size(40, 40),
-              },
-            });
-          });
-        } else {
-          console.log("Map instance not available.");
-        }
-      });
-    }
-  }, [socket, mapInstance]);
+    customerChannel.bind("ride-accepted", ({ driver }) => {
+      dispatch(closeModal());
+      setDriversLocation(driver.location);
+    });
+  }, [mapInstance]);
 
   if (isLoading && !user) {
     document.body.classList.add("loading-indicator");
@@ -417,11 +396,15 @@ const Map = () => {
               className="btn btn-primary w-52 m-3"
               onClick={() => {
                 openFindingRideModal();
-                socket.emit("customer-ride-request", {
-                  rideInformation,
-                  currentLocation,
-                  currentAddress: fromInputRef.current.value,
-                  user,
+                triggerEvent({
+                  bodyData: {
+                    rideInformation,
+                    currentLocation,
+                    currentAddress: fromInputRef.current.value,
+                    customer: user,
+                    rideId: uuid(),
+                  },
+                  eventName: "ride-request",
                 });
               }}
               disabled={
@@ -454,7 +437,6 @@ const Map = () => {
         initialCustomerLng: currentLocation.lng,
       }}
       currentLocation={currentLocation}
-      socket={socket}
     />
   ) : (
     <p>Loading driver location...</p>

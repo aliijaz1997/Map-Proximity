@@ -1,18 +1,18 @@
 import React, { useEffect } from "react";
-import socket from "../../utils/socket";
 import { useDispatch, useSelector } from "react-redux";
 import {
   useGetUserByIdQuery,
+  useTriggerEventsMutation,
   useUpdateRideMutation,
 } from "../../app/service/api";
-import PreStartRideDriverModal from "./PreStartRideDriverModal";
 import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 import { openModal } from "../common/modalSlice";
 import { showNotification } from "../common/headerSlice";
+import { PusherInstance } from "../../utils/pusher/default";
 
 export default function DriverClient() {
   const [showRequestModal, setShowRequestModal] = React.useState(false);
-  const [customerInfo, setCustomerInfo] = React.useState(null);
+  const [rideRequestData, setRideRequestData] = React.useState(null);
   const [remainingTime, setRemainingTime] = React.useState(null);
 
   const { user: reduxUser } = useSelector((state) => state.auth);
@@ -20,17 +20,18 @@ export default function DriverClient() {
     id: reduxUser?.uid,
   });
   const [updateRide, { isSuccess }] = useUpdateRideMutation();
+  const [triggerEvent] = useTriggerEventsMutation();
   const dispatch = useDispatch();
 
   const progressBarWidth = ((remainingTime || 15) / 15) * 100;
 
-  const openPreStartRideModal = ({ customer, driver }) => {
+  const openPreStartRideModal = ({ rideRequestData, driver }) => {
     dispatch(
       openModal({
         title: "Customer is waiting!",
         bodyType: MODAL_BODY_TYPES.PRE_START_DRIVER_RIDE_MODAL,
         extraObject: {
-          customer,
+          rideRequestData,
           driver,
         },
       })
@@ -38,28 +39,13 @@ export default function DriverClient() {
   };
 
   useEffect(() => {
-    if (socket) {
-      socket.on("driver-ride-request", (data) => {
-        setCustomerInfo(data);
-        setShowRequestModal(true);
-      });
-      socket.on("timer-update", ({ time }) => {
-        setRemainingTime(time);
-        if (time === 0) {
-          setShowRequestModal(false);
-        }
-      });
-
-      socket.on("driver-assign", ({ customer, driver }) => {
-        setShowRequestModal(false);
-        openPreStartRideModal({
-          customer,
-          driver,
-        });
-        setCustomerInfo(customer);
-      });
-    }
-  });
+    const driverChannel = PusherInstance.subscribe("ride");
+    driverChannel.bind("ride-request", (data) => {
+      console.log("Customer Request Information", data);
+      setRideRequestData(data);
+      setShowRequestModal(true);
+    });
+  }, []);
 
   useEffect(() => {
     if (isSuccess) {
@@ -73,7 +59,6 @@ export default function DriverClient() {
   if (!isLoading && user) {
     document.body.classList.remove("loading-indicator");
   }
-  console.log(customerInfo);
   return (
     <div className=" dark:text-gray-300 flex justify-center items-center mt-8">
       The popup will appear when any customer will request the ride with in your
@@ -91,13 +76,13 @@ export default function DriverClient() {
               />
             </div>
             <h2 className="text-xl font-bold mb-4">Request Details</h2>
-            <p>Customer Name: {customerInfo?.customer?.firstName}</p>
+            <p>Customer Name: {rideRequestData?.customer?.firstName}</p>
             <p>
-              Location: {customerInfo?.rideInformation?.destination.address}
+              Location: {rideRequestData?.rideInformation?.destination.address}
             </p>
-            <p>Distance: {customerInfo?.rideInformation?.distance} km</p>
-            <p>Phone Number: {customerInfo?.customer?.phoneNumber}</p>
-            <p>Offered Price: {customerInfo?.rideInformation?.fare}</p>
+            <p>Distance: {rideRequestData?.rideInformation?.distance} km</p>
+            <p>Phone Number: {rideRequestData?.customer?.phoneNumber}</p>
+            <p>Offered Price: {rideRequestData?.rideInformation?.fare}</p>
             <div className="flex justify-between items-center mt-6">
               <button className="px-4 py-2 bg-red-500 text-white rounded shadow">
                 Decline
@@ -105,24 +90,32 @@ export default function DriverClient() {
               <button
                 className="px-4 py-2 bg-green-500 text-white rounded shadow"
                 onClick={() => {
-                  socket.emit("ride-accepted", {
-                    customer: customerInfo,
+                  triggerEvent({
+                    bodyData: {
+                      rideRequestData,
+                      driver: user,
+                    },
+                    eventName: "ride-accepted",
+                  });
+                  setShowRequestModal(false);
+                  openPreStartRideModal({
+                    rideRequestData,
                     driver: user,
                   });
                   updateRide({
-                    id: customerInfo.rideId,
+                    id: rideRequestData.rideId,
                     body: {
-                      _id: customerInfo.rideId,
+                      _id: rideRequestData.rideId,
                       status: "accepted",
                       customer: {
-                        _id: customerInfo.customer._id,
-                        name: customerInfo.customer.firstName,
+                        _id: rideRequestData.customer._id,
+                        name: rideRequestData.customer.firstName,
                       },
                       driver: {
                         _id: user._id,
                         name: user.firstName,
                       },
-                      rideInformation: customerInfo?.rideInformation,
+                      rideInformation: rideRequestData?.rideInformation,
                     },
                   });
                 }}

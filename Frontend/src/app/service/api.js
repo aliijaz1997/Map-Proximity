@@ -88,6 +88,13 @@ export const api = createApi({
         body,
       }),
     }),
+    triggerEvents: builder.mutation({
+      query: (body) => ({
+        url: "events",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -102,4 +109,5 @@ export const {
   useDeleteLocationMutation,
   useUpdateRideMutation,
   useGetAllRidesQuery,
+  useTriggerEventsMutation,
 } = api;

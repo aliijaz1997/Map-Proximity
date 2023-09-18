@@ -5,6 +5,7 @@ import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 import { showNotification } from "../../features/common/headerSlice";
 import { driverLatLong } from "../../utils/map/fakeLatLngDriver";
 import CountdownTimer from "./CountDownTimer";
+import { PusherInstance } from "../../utils/pusher/default";
 
 const driverIconSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="green" class="w-6 h-6">
@@ -163,29 +164,6 @@ function DriverCustomerLocation({ locations, currentLocation, socket }) {
       };
     }
   }, [driverMarker, routeDetails.routeCoordinates.length]);
-
-  useEffect(() => {
-    socket.on("ride-start", ({ customerInfo, driver }) => {
-      dispatch(
-        showNotification({
-          message: "Map will show the destination and your current location!",
-          status: 1,
-        })
-      );
-    });
-    socket.on("ride-end", ({ customerInfo, driver }) => {
-      dispatch(
-        openModal({
-          title: "Your ride has been ended",
-          bodyType: MODAL_BODY_TYPES.RIDE_END_MODAL,
-          extraObject: {
-            customerInfo,
-            driver,
-          },
-        })
-      );
-    });
-  }, [socket]);
 
   return (
     <div>

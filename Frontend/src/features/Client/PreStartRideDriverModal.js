@@ -1,15 +1,18 @@
 import { useEffect } from "react";
-import socket from "../../utils/socket";
-import { useUpdateRideMutation } from "../../app/service/api";
+import {
+  useTriggerEventsMutation,
+  useUpdateRideMutation,
+} from "../../app/service/api";
 import { showNotification } from "../common/headerSlice";
 import { useDispatch } from "react-redux";
 import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 import { openModal } from "../common/modalSlice";
 
 const PreStartRideDriverModal = ({ closeModal, extraObject }) => {
-  const { customer: customerInfo, driver } = extraObject;
-  const [updateRide, { isSuccess }] = useUpdateRideMutation();
+  const { rideRequestData, driver } = extraObject;
 
+  const [updateRide, { isSuccess }] = useUpdateRideMutation();
+  const [triggerEvent] = useTriggerEventsMutation();
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -18,12 +21,15 @@ const PreStartRideDriverModal = ({ closeModal, extraObject }) => {
     }
   }, [isSuccess]);
   const handleStartRide = async () => {
-    socket.emit("ride-started", {
-      customerInfo,
-      driver,
+    triggerEvent({
+      bodyData: {
+        rideRequestData,
+        driver,
+      },
+      eventName: "ride-started",
     });
     await updateRide({
-      id: customerInfo.rideId,
+      id: rideRequestData.rideId,
       body: {
         status: "started",
       },
@@ -34,7 +40,7 @@ const PreStartRideDriverModal = ({ closeModal, extraObject }) => {
         title: "You're ride has been started",
         bodyType: MODAL_BODY_TYPES.START_DRIVER_RIDE_MODAL,
         extraObject: {
-          customerInfo,
+          rideRequestData,
           driver,
         },
       })
@@ -48,12 +54,13 @@ const PreStartRideDriverModal = ({ closeModal, extraObject }) => {
       <div className="mb-4 flex">
         <h6 className="font-semibold">Customer Name: </h6>
         <p>
-          {customerInfo.customer.firstName} {customerInfo.customer.lastName}
+          {rideRequestData.customer.firstName}{" "}
+          {rideRequestData.customer.lastName}
         </p>
       </div>
       <div className="mb-4">
         <h6 className="font-semibold">Address:</h6>
-        <p>{customerInfo.currentAddress}</p>
+        <p>{rideRequestData.currentAddress}</p>
       </div>
       <svg
         xmlns="http://www.w3.org/2000/svg"

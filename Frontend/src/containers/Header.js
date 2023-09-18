@@ -13,7 +13,6 @@ import { signOut } from "firebase/auth";
 import { auth } from "../utils/firebase";
 import { logoutRedux } from "../app/slices/authSlice";
 import { useGetUserByIdQuery, useUpdateUserMutation } from "../app/service/api";
-import socket from "../utils/socket";
 
 function Header() {
   const [isOnline, setIsOnline] = useState(true);
@@ -60,56 +59,38 @@ function Header() {
     });
   }
 
-  useEffect(() => {
-    if (!user) return;
-    if (user.role === "driver") {
-      socket.emit("add-driver", {
-        name: user.firstName,
-        phoneNumber: user.phoneNumber,
-        online: isOnline,
-        location: user.location,
-      });
-    }
-    if (user.role === "customer") {
-      socket.emit("add-customer", {
-        name: user.firstName,
-        phoneNumber: user.phoneNumber,
-      });
-    }
-  }, [isOnline, user]);
+  // useEffect(() => {
+  //   let locationUpdateInterval;
 
-  useEffect(() => {
-    let locationUpdateInterval;
+  //   const updateLocation = () => {
+  //     if (!user) return;
+  //     navigator.geolocation.getCurrentPosition(
+  //       (position) => {
+  //         const updatedLat = position.coords.latitude;
+  //         const updatedLng = position.coords.longitude;
 
-    const updateLocation = () => {
-      if (!user) return;
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const updatedLat = position.coords.latitude;
-          const updatedLng = position.coords.longitude;
+  //         updateUser({
+  //           id: user._id,
+  //           lat: updatedLat,
+  //           lng: updatedLng,
+  //         });
+  //         console.log(updatedLat, updatedLng);
+  //       },
+  //       (error) => {
+  //         console.error("Error getting location:", error);
+  //       }
+  //     );
+  //   };
 
-          updateUser({
-            id: user._id,
-            lat: updatedLat,
-            lng: updatedLng,
-          });
-          console.log(updatedLat, updatedLng);
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-        }
-      );
-    };
+  //   if (isOnline && user?.role === "driver") {
+  //     updateLocation();
+  //     locationUpdateInterval = setInterval(updateLocation, 10000);
+  //   } else {
+  //     clearInterval(locationUpdateInterval);
+  //   }
 
-    if (isOnline && user?.role === "driver") {
-      updateLocation();
-      locationUpdateInterval = setInterval(updateLocation, 10000);
-    } else {
-      clearInterval(locationUpdateInterval);
-    }
-
-    return () => clearInterval(locationUpdateInterval);
-  }, [isOnline, user, updateUser]);
+  //   return () => clearInterval(locationUpdateInterval);
+  // }, [isOnline, user, updateUser]);
 
   if (isLoading && !user) {
     return document.body.classList.add("loading-indicator");

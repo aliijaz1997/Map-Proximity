@@ -1,15 +1,18 @@
 import React, { useEffect } from "react";
-import socket from "../../utils/socket";
-import { useUpdateRideMutation } from "../../app/service/api";
+import {
+  useTriggerEventsMutation,
+  useUpdateRideMutation,
+} from "../../app/service/api";
 import { useDispatch } from "react-redux";
 import { showNotification } from "../common/headerSlice";
 
 const StartRideModal = ({ closeModal, extraObject }) => {
-  const { customerInfo, driver } = extraObject;
+  const { rideRequestData, driver } = extraObject;
 
   const dispatch = useDispatch();
-  const [updateRide, { isSuccess }] = useUpdateRideMutation();
 
+  const [updateRide, { isSuccess }] = useUpdateRideMutation();
+  const [triggerEvent] = useTriggerEventsMutation();
   useEffect(() => {
     if (isSuccess) {
       dispatch(showNotification({ message: "Ride is updated!", status: 1 }));
@@ -17,12 +20,15 @@ const StartRideModal = ({ closeModal, extraObject }) => {
   }, [isSuccess]);
 
   const handleEndRide = async () => {
-    socket.emit("ride-ended", {
-      customerInfo,
-      driver,
+    triggerEvent({
+      bodyData: {
+        rideRequestData,
+        driver,
+      },
+      eventName: "ride-ended",
     });
     await updateRide({
-      id: customerInfo.rideId,
+      id: rideRequestData.rideId,
       body: {
         status: "completed",
       },
@@ -37,15 +43,15 @@ const StartRideModal = ({ closeModal, extraObject }) => {
       </div>
       <div className="mb-4">
         <span className="font-bold">Destination:</span>{" "}
-        {customerInfo.rideInformation.destinationAddress}
+        {rideRequestData.rideInformation.destinationAddress}
       </div>
       <div className="mb-4">
         <span className="font-bold">Time:</span>{" "}
-        {customerInfo.rideInformation.duration}
+        {rideRequestData.rideInformation.duration}
       </div>
       <div className="mb-6">
         <span className="font-bold">Distance:</span>{" "}
-        {customerInfo.rideInformation.distance} km
+        {rideRequestData.rideInformation.distance} km
       </div>
       <button
         onClick={handleEndRide}

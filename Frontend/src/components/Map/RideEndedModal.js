@@ -8,7 +8,7 @@ export default function RideEndedModal({ closeModal, extraObject }) {
 
   const dispatch = useDispatch();
 
-  const { driver, customerInfo } = extraObject;
+  const { rideRequestData, driver } = extraObject;
   const [updateRide, { isSuccess }] = useUpdateRideMutation();
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export default function RideEndedModal({ closeModal, extraObject }) {
     setRating(ratingValue);
 
     updateRide({
-      id: customerInfo.rideId,
+      id: rideRequestData.rideId,
       body: { rating: ratingValue },
     });
   };
