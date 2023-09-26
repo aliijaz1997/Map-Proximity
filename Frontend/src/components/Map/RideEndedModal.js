@@ -20,7 +20,7 @@ export default function RideEndedModal({ closeModal, extraObject }) {
         })
       );
       closeModal();
-      window.location.href = "/";
+      window.location.href = "/customer";
     }
   }, [isSuccess]);
 

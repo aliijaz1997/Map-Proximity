@@ -90,7 +90,7 @@ export const api = createApi({
     }),
     triggerEvents: builder.mutation({
       query: (body) => ({
-        url: "events",
+        url: "pusher",
         method: "POST",
         body,
       }),

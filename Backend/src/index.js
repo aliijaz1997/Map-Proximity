@@ -21,7 +21,7 @@ const VerifyToken = require("./middlewares/verifyToken");
 app.use("/api/users", VerifyToken, userRoute);
 app.use("/api/location", VerifyToken, locationRoute);
 app.use("/api/ride", VerifyToken, rideRoute);
-app.use("/api/events", VerifyToken, eventRoute);
+app.use("/api/pusher", eventRoute);
 
 const port = process.env.PORT || 5000;
 

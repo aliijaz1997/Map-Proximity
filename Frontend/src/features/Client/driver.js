@@ -39,13 +39,34 @@ export default function DriverClient() {
   };
 
   useEffect(() => {
-    const driverChannel = PusherInstance.subscribe("ride");
-    driverChannel.bind("ride-request", (data) => {
+    if (!user._id) return;
+    const pusher = PusherInstance({ user_id: user._id });
+    const driverChannel = pusher.subscribe("presence-ride");
+
+    driverChannel.bind("pusher:subscription_succeeded", (members) => {
+      console.log("Subscription Succeeded", members);
+    });
+
+    driverChannel.bind("pusher:subscription_error", (status) => {
+      console.error("Pusher subscription error:", status);
+    });
+
+    // when a new member joins the chat
+    driverChannel.bind("pusher:member_added", (member) => {
+      console.log(member, "ADDED");
+    });
+
+    // when a member leaves the chat
+    driverChannel.bind("pusher:member_removed", (member) => {
+      console.log(member, "REMOVED");
+    });
+
+    driverChannel.bind("presence-request", (data) => {
       console.log("Customer Request Information", data);
       setRideRequestData(data);
       setShowRequestModal(true);
     });
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (isSuccess) {
@@ -95,7 +116,7 @@ export default function DriverClient() {
                       rideRequestData,
                       driver: user,
                     },
-                    eventName: "ride-accepted",
+                    eventName: "presence-accepted",
                   });
                   setShowRequestModal(false);
                   openPreStartRideModal({

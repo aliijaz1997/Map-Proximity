@@ -13,7 +13,6 @@ import TitleCard from "../Cards/TitleCard";
 import { getLocation } from "../../utils/map/getLocation";
 import {
   destinationIconUrl,
-  driversCarIconUrl,
   personIconUrl,
   pinLocationIconUrl,
 } from "../../utils/icons";
@@ -33,6 +32,7 @@ const Map = () => {
   );
   const [driversLocation, setDriversLocation] = useState(null);
   const [isLocationRestricted, setIsLocationRestricted] = useState(false);
+  const [members, setMembers] = useState([]);
 
   const { user: reduxUser } = useSelector((state) => state.auth);
   const { data: user, isLoading } = useGetUserByIdQuery({
@@ -41,6 +41,10 @@ const Map = () => {
   const { data: polygons, isLoading: isLocationLoading } =
     useGetLocationQuery();
   const [triggerEvent] = useTriggerEventsMutation();
+
+  const customerChannel = PusherInstance({
+    user_id: user._id,
+  }).subscribe("presence-ride");
 
   const dispatch = useDispatch();
 
@@ -305,12 +309,43 @@ const Map = () => {
     fromInputRef.current,
     polygons,
   ]);
-
-  console.log(polygons);
+  console.log("Members", members);
   useEffect(() => {
-    const customerChannel = PusherInstance.subscribe("ride");
+    customerChannel.bind("pusher:subscription_succeeded", (data) => {
+      const memberList = Object.entries(data.members)
+        .filter(([_key, value]) => value.role === "driver")
+        .map(([key, value]) => ({ id: key, info: value }));
+      setMembers(memberList);
+    });
 
-    customerChannel.bind("ride-accepted", ({ driver }) => {
+    customerChannel.bind("pusher:subscription_error", (status) => {
+      console.error("Pusher subscription error:", status);
+    });
+    customerChannel.bind("pusher:member_added", (member) => {
+      setMembers((prevMembers) => {
+        const existingMemberIndex = prevMembers.findIndex(
+          (existingMember) => existingMember.id === member.id
+        );
+
+        if (existingMemberIndex !== -1) {
+          const updatedMembers = [...prevMembers];
+          updatedMembers[existingMemberIndex] = member;
+          return updatedMembers;
+        } else {
+          return [...prevMembers, member];
+        }
+      });
+    });
+
+    customerChannel.bind("pusher:member_removed", (member) => {
+      setMembers((prevMembers) => {
+        const updatedMembers = prevMembers.filter(
+          (existingMember) => existingMember.id !== member.id
+        );
+        return updatedMembers;
+      });
+    });
+    customerChannel.bind("presence-accepted", ({ driver }) => {
       dispatch(closeModal());
       setDriversLocation(driver.location);
     });
@@ -395,17 +430,21 @@ const Map = () => {
             <button
               className="btn btn-primary w-52 m-3"
               onClick={() => {
-                openFindingRideModal();
-                triggerEvent({
-                  bodyData: {
-                    rideInformation,
-                    currentLocation,
-                    currentAddress: fromInputRef.current.value,
-                    customer: user,
-                    rideId: uuid(),
-                  },
-                  eventName: "ride-request",
-                });
+                if (members.length > 0) {
+                  openFindingRideModal();
+                  triggerEvent({
+                    bodyData: {
+                      rideInformation,
+                      currentLocation,
+                      currentAddress: fromInputRef.current.value,
+                      customer: user,
+                      rideId: uuid(),
+                    },
+                    eventName: "presence-request",
+                  });
+                } else {
+                  openNoFoundRideModal("Please try after some time!");
+                }
               }}
               disabled={
                 !rideInformation.distance &&
@@ -437,6 +476,7 @@ const Map = () => {
         initialCustomerLng: currentLocation.lng,
       }}
       currentLocation={currentLocation}
+      customerChannel={customerChannel}
     />
   ) : (
     <p>Loading driver location...</p>

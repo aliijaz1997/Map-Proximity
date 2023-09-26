@@ -29,7 +29,11 @@ const customerIconUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
   customerIconSvg
 )}`;
 
-function DriverCustomerLocation({ locations, currentLocation, socket }) {
+function DriverCustomerLocation({
+  locations,
+  currentLocation,
+  customerChannel,
+}) {
   const [driverLocation, setDriverLocation] = useState(null);
   const [customerLocation, setCustomerLocation] = useState(null);
   const [mapInstance, setMapInstance] = useState(null);
@@ -164,6 +168,29 @@ function DriverCustomerLocation({ locations, currentLocation, socket }) {
       };
     }
   }, [driverMarker, routeDetails.routeCoordinates.length]);
+
+  useEffect(() => {
+    customerChannel.bind("presence-started", () => {
+      dispatch(
+        showNotification({
+          message: "Map will show the destination and your current location!",
+          status: 1,
+        })
+      );
+    });
+    customerChannel.bind("presence-ended", ({ rideRequestData, driver }) => {
+      dispatch(
+        openModal({
+          title: "Your ride has been ended",
+          bodyType: MODAL_BODY_TYPES.RIDE_END_MODAL,
+          extraObject: {
+            rideRequestData,
+            driver,
+          },
+        })
+      );
+    });
+  }, []);
 
   return (
     <div>

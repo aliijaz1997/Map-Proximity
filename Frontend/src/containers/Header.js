@@ -13,6 +13,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "../utils/firebase";
 import { logoutRedux } from "../app/slices/authSlice";
 import { useGetUserByIdQuery, useUpdateUserMutation } from "../app/service/api";
+import { PusherInstance } from "../utils/pusher/default";
 
 function Header() {
   const [isOnline, setIsOnline] = useState(true);
@@ -21,13 +22,16 @@ function Header() {
   const { data: user, isLoading } = useGetUserByIdQuery({
     id: reduxUser?.uid,
   });
-  const [updateUser] = useUpdateUserMutation();
 
   const dispatch = useDispatch();
   const { noOfNotifications, pageTitle } = useSelector((state) => state.header);
   const [currentTheme, setCurrentTheme] = useState(
     localStorage.getItem("theme")
   );
+
+  const presenceChannel = PusherInstance({
+    user_id: user._id,
+  }).subscribe("presence-ride");
 
   useEffect(() => {
     themeChange(false);
@@ -58,39 +62,6 @@ function Header() {
       dispatch(logoutRedux());
     });
   }
-
-  // useEffect(() => {
-  //   let locationUpdateInterval;
-
-  //   const updateLocation = () => {
-  //     if (!user) return;
-  //     navigator.geolocation.getCurrentPosition(
-  //       (position) => {
-  //         const updatedLat = position.coords.latitude;
-  //         const updatedLng = position.coords.longitude;
-
-  //         updateUser({
-  //           id: user._id,
-  //           lat: updatedLat,
-  //           lng: updatedLng,
-  //         });
-  //         console.log(updatedLat, updatedLng);
-  //       },
-  //       (error) => {
-  //         console.error("Error getting location:", error);
-  //       }
-  //     );
-  //   };
-
-  //   if (isOnline && user?.role === "driver") {
-  //     updateLocation();
-  //     locationUpdateInterval = setInterval(updateLocation, 10000);
-  //   } else {
-  //     clearInterval(locationUpdateInterval);
-  //   }
-
-  //   return () => clearInterval(locationUpdateInterval);
-  // }, [isOnline, user, updateUser]);
 
   if (isLoading && !user) {
     return document.body.classList.add("loading-indicator");
