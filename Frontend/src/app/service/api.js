@@ -95,6 +95,12 @@ export const api = createApi({
         body,
       }),
     }),
+    terminateUserConnection: builder.mutation({
+      query: ({ id }) => ({
+        url: `pusher/terminate/${id}`,
+        method: "POST",
+      }),
+    }),
   }),
 });
 
@@ -110,4 +116,5 @@ export const {
   useUpdateRideMutation,
   useGetAllRidesQuery,
   useTriggerEventsMutation,
+  useTerminateUserConnectionMutation,
 } = api;

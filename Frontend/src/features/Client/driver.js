@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   useGetUserByIdQuery,
@@ -23,6 +23,8 @@ export default function DriverClient() {
   const [triggerEvent] = useTriggerEventsMutation();
   const dispatch = useDispatch();
 
+  const channelRef = useRef();
+
   const progressBarWidth = ((remainingTime || 15) / 15) * 100;
 
   const openPreStartRideModal = ({ rideRequestData, driver }) => {
@@ -38,10 +40,57 @@ export default function DriverClient() {
     );
   };
 
+  const checkForInactivity = () => {
+    const expireTime = localStorage.getItem("expireTime");
+    if (expireTime < Date.now()) {
+      console.log("User is inavtive", user);
+      if (user && user.driverStatus === "online") {
+        channelRef.current.trigger(`client-status-change-request`, {
+          id: user._id,
+          status: "offline",
+        });
+      }
+    }
+  };
+
+  const updateExpireTime = () => {
+    const expireTime = Date.now() + 20000;
+
+    localStorage.setItem("expireTime", expireTime);
+  };
+
   useEffect(() => {
-    if (!user._id) return;
+    let interval;
+    if (user && user.driverStatus === "online") {
+      interval = setInterval(() => {
+        checkForInactivity();
+      }, 5000);
+    }
+    if (interval) {
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    updateExpireTime();
+
+    window.addEventListener("click", updateExpireTime);
+    window.addEventListener("keypress", updateExpireTime);
+    window.addEventListener("scroll", updateExpireTime);
+    window.addEventListener("mousemove", updateExpireTime);
+    return () => {
+      window.removeEventListener("click", updateExpireTime);
+      window.removeEventListener("keypress", updateExpireTime);
+      window.removeEventListener("scroll", updateExpireTime);
+      window.removeEventListener("mousemove", updateExpireTime);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!user && !channelRef.current) return;
     const pusher = PusherInstance({ user_id: user._id });
     const driverChannel = pusher.subscribe("presence-ride");
+    channelRef.current = driverChannel;
 
     driverChannel.bind("pusher:subscription_succeeded", (members) => {
       console.log("Subscription Succeeded", members);
@@ -60,8 +109,7 @@ export default function DriverClient() {
     driverChannel.bind("pusher:member_removed", (member) => {
       console.log(member, "REMOVED");
     });
-
-    driverChannel.bind("presence-request", (data) => {
+    driverChannel.bind(`presence-request-${user._id}`, (data) => {
       console.log("Customer Request Information", data);
       setRideRequestData(data);
       setShowRequestModal(true);
@@ -80,10 +128,12 @@ export default function DriverClient() {
   if (!isLoading && user) {
     document.body.classList.remove("loading-indicator");
   }
+
+  console.log(rideRequestData, "kjhkjdh");
   return (
     <div className=" dark:text-gray-300 flex justify-center items-center mt-8">
-      The popup will appear when any customer will request the ride with in your
-      area!
+      Hey {user.firstName} {user.lastName}The popup will appear when any
+      customer will request the ride with in your area!
       {showRequestModal && (
         <div className="fixed inset-0 flex justify-center items-center z-50 bg bg-opacity-75">
           <div className=" rounded-lg p-8 relative">
@@ -116,7 +166,7 @@ export default function DriverClient() {
                       rideRequestData,
                       driver: user,
                     },
-                    eventName: "presence-accepted",
+                    eventName: `presence-accepted-${rideRequestData.customer._id}`,
                   });
                   setShowRequestModal(false);
                   openPreStartRideModal({

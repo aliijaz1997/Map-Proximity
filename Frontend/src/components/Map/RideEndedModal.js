@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useUpdateRideMutation } from "../../app/service/api";
+import {
+  useUpdateRideMutation,
+  useUpdateUserMutation,
+} from "../../app/service/api";
 import { showNotification } from "../../features/common/headerSlice";
 import { useDispatch } from "react-redux";
 
@@ -8,8 +11,9 @@ export default function RideEndedModal({ closeModal, extraObject }) {
 
   const dispatch = useDispatch();
 
-  const { rideRequestData, driver } = extraObject;
+  const { rideRequestData, driver, customerChannel } = extraObject;
   const [updateRide, { isSuccess }] = useUpdateRideMutation();
+  const [updateDriver] = useUpdateUserMutation();
 
   useEffect(() => {
     if (isSuccess) {
@@ -31,6 +35,10 @@ export default function RideEndedModal({ closeModal, extraObject }) {
     updateRide({
       id: rideRequestData.rideId,
       body: { rating: ratingValue },
+    });
+    customerChannel.trigger(`client-status-change-request`, {
+      id: driver._id,
+      status: "online",
     });
   };
   return (

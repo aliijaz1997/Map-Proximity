@@ -3,7 +3,9 @@ import { getMapStyles } from "./Styles";
 import {
   useGetLocationQuery,
   useGetUserByIdQuery,
+  useGetUsersQuery,
   useTriggerEventsMutation,
+  useUpdateUserMutation,
 } from "../../app/service/api";
 import { useDispatch, useSelector } from "react-redux";
 import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
@@ -18,6 +20,12 @@ import {
 } from "../../utils/icons";
 import { PusherInstance } from "../../utils/pusher/default";
 import uuid from "react-uuid";
+import {
+  changeDriverStatus,
+  setActiveDrivers,
+  setEngagedDrivers,
+} from "../../app/slices/presenceChannelSlice";
+import { getNearestDriver } from "../../utils/pusher/getNearestDriver";
 
 const Map = () => {
   const [currentLocation, setCurrentLocation] = useState(null);
@@ -32,25 +40,24 @@ const Map = () => {
   );
   const [driversLocation, setDriversLocation] = useState(null);
   const [isLocationRestricted, setIsLocationRestricted] = useState(false);
-  const [members, setMembers] = useState([]);
 
   const { user: reduxUser } = useSelector((state) => state.auth);
+  const { activeDrivers } = useSelector((state) => state.presenceChannel);
   const { data: user, isLoading } = useGetUserByIdQuery({
     id: reduxUser?.uid,
   });
+  const { data: allUsers } = useGetUsersQuery({ role: "drivers" });
+  const [updateUser] = useUpdateUserMutation();
   const { data: polygons, isLoading: isLocationLoading } =
     useGetLocationQuery();
   const [triggerEvent] = useTriggerEventsMutation();
-
-  const customerChannel = PusherInstance({
-    user_id: user._id,
-  }).subscribe("presence-ride");
 
   const dispatch = useDispatch();
 
   const mapRef = useRef(null);
   const fromInputRef = useRef(null);
   const toInputRef = useRef(null);
+  const channelRef = useRef(null);
 
   const openFindingRideModal = () => {
     dispatch(
@@ -309,47 +316,62 @@ const Map = () => {
     fromInputRef.current,
     polygons,
   ]);
-  console.log("Members", members);
+  console.log("Members", activeDrivers);
   useEffect(() => {
+    if (!user) return;
+    const customerChannel = PusherInstance({
+      user_id: user._id,
+    }).subscribe("presence-ride");
+
+    channelRef.current = customerChannel;
     customerChannel.bind("pusher:subscription_succeeded", (data) => {
       const memberList = Object.entries(data.members)
         .filter(([_key, value]) => value.role === "driver")
         .map(([key, value]) => ({ id: key, info: value }));
-      setMembers(memberList);
+      dispatch(setActiveDrivers(memberList));
     });
 
     customerChannel.bind("pusher:subscription_error", (status) => {
       console.error("Pusher subscription error:", status);
     });
     customerChannel.bind("pusher:member_added", (member) => {
-      setMembers((prevMembers) => {
-        const existingMemberIndex = prevMembers.findIndex(
-          (existingMember) => existingMember.id === member.id
-        );
+      if (member.info.role !== "driver") return;
+      const existingMemberIndex = activeDrivers.findIndex(
+        (existingMember) => existingMember.id === member.id
+      );
+      let updatedMembers = [];
+      if (existingMemberIndex !== -1) {
+        updatedMembers = [...activeDrivers];
+        updatedMembers[existingMemberIndex] = member;
+      } else {
+        updatedMembers = [...activeDrivers, member];
+      }
 
-        if (existingMemberIndex !== -1) {
-          const updatedMembers = [...prevMembers];
-          updatedMembers[existingMemberIndex] = member;
-          return updatedMembers;
-        } else {
-          return [...prevMembers, member];
-        }
-      });
+      dispatch(setActiveDrivers(updatedMembers));
     });
 
     customerChannel.bind("pusher:member_removed", (member) => {
-      setMembers((prevMembers) => {
-        const updatedMembers = prevMembers.filter(
-          (existingMember) => existingMember.id !== member.id
-        );
-        return updatedMembers;
-      });
+      if (member.info.role !== "driver") return;
+      const updatedMembers = activeDrivers.filter(
+        (existingMember) => existingMember.id !== member.id
+      );
+
+      dispatch(setActiveDrivers(updatedMembers));
     });
-    customerChannel.bind("presence-accepted", ({ driver }) => {
+    customerChannel.bind(`presence-accepted-${user._id}`, ({ driver }) => {
+      console.log(user, "In Map", { driver });
       dispatch(closeModal());
       setDriversLocation(driver.location);
+      customerChannel.trigger(`client-status-change-request`, {
+        id: driver._id,
+        status: "engaged",
+      });
     });
-  }, [mapInstance]);
+
+    customerChannel.bind(`client-status-change-request`, ({ id, status }) => {
+      dispatch(changeDriverStatus({ id, status }));
+    });
+  }, [mapInstance, user]);
 
   if (isLoading && !user) {
     document.body.classList.add("loading-indicator");
@@ -430,20 +452,29 @@ const Map = () => {
             <button
               className="btn btn-primary w-52 m-3"
               onClick={() => {
-                if (members.length > 0) {
-                  openFindingRideModal();
-                  triggerEvent({
-                    bodyData: {
-                      rideInformation,
-                      currentLocation,
-                      currentAddress: fromInputRef.current.value,
-                      customer: user,
-                      rideId: uuid(),
-                    },
-                    eventName: "presence-request",
+                if (activeDrivers.length > 0) {
+                  const driverToRequest = getNearestDriver({
+                    driversList: activeDrivers,
+                    pickupLocation: rideInformation.origin.coordinates,
                   });
+                  console.log({ driverToRequest });
+                  if (driverToRequest) {
+                    openFindingRideModal();
+                    triggerEvent({
+                      bodyData: {
+                        rideInformation,
+                        currentLocation,
+                        currentAddress: fromInputRef.current.value,
+                        customer: user,
+                        rideId: uuid(),
+                      },
+                      eventName: `presence-request-${driverToRequest.id}`,
+                    });
+                  } else {
+                    openNoFoundRideModal("Drivers are busy");
+                  }
                 } else {
-                  openNoFoundRideModal("Please try after some time!");
+                  openNoFoundRideModal("No driver is available");
                 }
               }}
               disabled={
@@ -475,8 +506,9 @@ const Map = () => {
         initialCustomerLat: currentLocation.lat,
         initialCustomerLng: currentLocation.lng,
       }}
+      customer={user}
       currentLocation={currentLocation}
-      customerChannel={customerChannel}
+      customerChannel={channelRef.current}
     />
   ) : (
     <p>Loading driver location...</p>

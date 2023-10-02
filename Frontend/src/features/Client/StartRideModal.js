@@ -25,7 +25,7 @@ const StartRideModal = ({ closeModal, extraObject }) => {
         rideRequestData,
         driver,
       },
-      eventName: "presence-ended",
+      eventName: `presence-ended-${rideRequestData.customer._id}`,
     });
     await updateRide({
       id: rideRequestData.rideId,

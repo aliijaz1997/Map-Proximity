@@ -1,5 +1,5 @@
 import { themeChange } from "theme-change";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import BellIcon from "@heroicons/react/24/outline/BellIcon";
 import Bars3Icon from "@heroicons/react/24/outline/Bars3Icon";
@@ -12,16 +12,21 @@ import { Link } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../utils/firebase";
 import { logoutRedux } from "../app/slices/authSlice";
-import { useGetUserByIdQuery, useUpdateUserMutation } from "../app/service/api";
+import {
+  useGetUserByIdQuery,
+  useTerminateUserConnectionMutation,
+  useUpdateUserMutation,
+} from "../app/service/api";
+import { changeDriverStatus } from "../app/slices/presenceChannelSlice";
 import { PusherInstance } from "../utils/pusher/default";
 
 function Header() {
-  const [isOnline, setIsOnline] = useState(true);
-
   const { user: reduxUser } = useSelector((state) => state.auth);
   const { data: user, isLoading } = useGetUserByIdQuery({
     id: reduxUser?.uid,
   });
+  console.log("user from header", user?.driverStatus);
+  const [updateUser] = useUpdateUserMutation();
 
   const dispatch = useDispatch();
   const { noOfNotifications, pageTitle } = useSelector((state) => state.header);
@@ -29,9 +34,19 @@ function Header() {
     localStorage.getItem("theme")
   );
 
-  const presenceChannel = PusherInstance({
-    user_id: user._id,
-  }).subscribe("presence-ride");
+  const channelRef = useRef();
+
+  useEffect(() => {
+    if (!user && !channelRef.current) return;
+    const driverChannel = PusherInstance({ user_id: user._id }).subscribe(
+      "presence-ride"
+    );
+    channelRef.current = driverChannel;
+    driverChannel.bind(`client-status-change-request`, ({ id, status }) => {
+      updateUser({ id, driverStatus: status });
+      dispatch(changeDriverStatus({ id, status }));
+    });
+  }, [user]);
 
   useEffect(() => {
     themeChange(false);
@@ -85,15 +100,35 @@ function Header() {
             {user.role === "driver" && (
               <button
                 className={`rounded-full w-14 h-6 ${
-                  isOnline ? "bg-green-500" : "bg-gray-300"
+                  user?.driverStatus === "online" ||
+                  user?.driverStatus === "engaged"
+                    ? "bg-green-500"
+                    : "bg-gray-300"
                 }`}
                 onClick={() => {
-                  setIsOnline(!isOnline);
+                  if (!user && !channelRef.current) {
+                    console.log("Something Missing");
+                    return;
+                  }
+                  if (user.driverStatus === "online") {
+                    channelRef.current.trigger(`client-status-change-request`, {
+                      id: user._id,
+                      status: "offline",
+                    });
+                  } else {
+                    console.log("click to online");
+                    channelRef.current.trigger(`client-status-change-request`, {
+                      id: user._id,
+                      status: "online",
+                    });
+                  }
                 }}
+                disabled={user?.driverStatus === "engaged"}
               >
                 <span
                   className={`block w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                    isOnline
+                    user?.driverStatus === "online" ||
+                    user?.driverStatus === "engaged"
                       ? "translate-x-8 bg-white"
                       : "translate-x-0 bg-gray-500"
                   }`}

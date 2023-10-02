@@ -3,6 +3,7 @@ const router = express.Router();
 const eventsController = require("../controllers/events");
 
 router.post("/", eventsController.triggerEvents);
+router.post("/terminate/:id", eventsController.terminateUserConnection);
 router.post("/user-auth", eventsController.authenticateUser);
 router.post("/channel-auth", eventsController.authorizeChannel);
 

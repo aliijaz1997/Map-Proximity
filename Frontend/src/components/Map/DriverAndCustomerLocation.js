@@ -33,6 +33,7 @@ function DriverCustomerLocation({
   locations,
   currentLocation,
   customerChannel,
+  customer,
 }) {
   const [driverLocation, setDriverLocation] = useState(null);
   const [customerLocation, setCustomerLocation] = useState(null);
@@ -170,7 +171,7 @@ function DriverCustomerLocation({
   }, [driverMarker, routeDetails.routeCoordinates.length]);
 
   useEffect(() => {
-    customerChannel.bind("presence-started", () => {
+    customerChannel.bind(`presence-started-${customer._id}`, () => {
       dispatch(
         showNotification({
           message: "Map will show the destination and your current location!",
@@ -178,18 +179,22 @@ function DriverCustomerLocation({
         })
       );
     });
-    customerChannel.bind("presence-ended", ({ rideRequestData, driver }) => {
-      dispatch(
-        openModal({
-          title: "Your ride has been ended",
-          bodyType: MODAL_BODY_TYPES.RIDE_END_MODAL,
-          extraObject: {
-            rideRequestData,
-            driver,
-          },
-        })
-      );
-    });
+    customerChannel.bind(
+      `presence-ended-${customer._id}`,
+      ({ rideRequestData, driver }) => {
+        dispatch(
+          openModal({
+            title: "Your ride has been ended",
+            bodyType: MODAL_BODY_TYPES.RIDE_END_MODAL,
+            extraObject: {
+              rideRequestData,
+              driver,
+              customerChannel,
+            },
+          })
+        );
+      }
+    );
   }, []);
 
   return (

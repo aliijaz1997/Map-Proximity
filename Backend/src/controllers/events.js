@@ -6,9 +6,15 @@ exports.triggerEvents = async (req, res, next) => {
     const { eventName, bodyData } = req.body;
     if (eventName && bodyData) {
       console.log(eventName, "RIDE RECEIVED");
-      pusher.trigger("presence-ride", eventName, bodyData).then((response) => {
-        return res.json(response);
-      });
+      pusher
+        .trigger("presence-ride", eventName, bodyData)
+        .then((response) => {
+          return res.json(response);
+        })
+        .catch((err) => {
+          console.log(err, "ERROR in POST EVENT REQUEST");
+          return res.json(err);
+        });
     } else {
       return res.json("No data was sent");
     }
@@ -58,5 +64,16 @@ exports.authorizeChannel = async (req, res, next) => {
   } catch (error) {
     console.error("Pusher authentication error:", error);
     res.status(403).send("Authorization failed");
+  }
+};
+
+exports.terminateUserConnection = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const terminateUser = await pusher.terminateUserConnections(id);
+    res.send(terminateUser);
+  } catch (err) {
+    res.status(500).send(err);
   }
 };

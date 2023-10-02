@@ -26,7 +26,7 @@ const PreStartRideDriverModal = ({ closeModal, extraObject }) => {
         rideRequestData,
         driver,
       },
-      eventName: "presence-started",
+      eventName: `presence-started-${rideRequestData.customer._id}`,
     });
     await updateRide({
       id: rideRequestData.rideId,
