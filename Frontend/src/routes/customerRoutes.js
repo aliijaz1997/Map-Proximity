@@ -4,6 +4,7 @@ import { lazy } from "react";
 
 const Dashboard = lazy(() => import("../pages/protected/CustomerDashboard"));
 const Customers = lazy(() => import("../pages/protected/ClientCustomer"));
+const Payment = lazy(() => import("../pages/protected/CustomerPayments"));
 
 const routes = [
   {
@@ -13,6 +14,10 @@ const routes = [
   {
     path: "/customer",
     component: Customers,
+  },
+  {
+    path: "/payment",
+    component: Payment,
   },
 ];
 

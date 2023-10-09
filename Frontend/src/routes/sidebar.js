@@ -7,6 +7,7 @@ import CustomersIcon from "@heroicons/react/24/outline/UserGroupIcon";
 import UsersIcon from "@heroicons/react/24/outline/UsersIcon";
 import ServiceIcon from "@heroicons/react/24/outline/ServerIcon";
 import CircleStackIcon from "@heroicons/react/24/outline/CircleStackIcon";
+import CreditCardIcon from "@heroicons/react/24/outline/CreditCardIcon";
 
 const iconClasses = `h-6 w-6`;
 const submenuIconClasses = `h-5 w-5`;
@@ -41,6 +42,11 @@ const routes = [
     path: "/rides", // url
     icon: <CircleStackIcon className={iconClasses} />, // icon component
     name: "Rides Data", // name that appear in Sidebar
+  },
+  {
+    path: "/payment", // url
+    icon: <CreditCardIcon className={iconClasses} />, // icon component
+    name: "Payment", // name that appear in Sidebar
   },
   {
     path: "", //no url needed as this has submenu

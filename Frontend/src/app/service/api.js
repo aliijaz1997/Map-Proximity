@@ -6,7 +6,7 @@ import { baseQueryWithReauth } from "../common/baseQuery";
 export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["User", "Users", "Location"],
+  tagTypes: ["User", "Users", "Location", "Payment"],
   endpoints: (builder) => ({
     getUsers: builder.query({
       query: ({ role }) => {
@@ -101,6 +101,80 @@ export const api = createApi({
         method: "POST",
       }),
     }),
+    addCard: builder.mutation({
+      query: ({ id }) => ({
+        url: `payment`,
+        method: "POST",
+      }),
+    }),
+    addCard: builder.mutation({
+      query: (body) => ({
+        url: `payment/addCard`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Payment", "User"],
+    }),
+    createPayment: builder.mutation({
+      query: (body) => ({
+        url: `payment`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Payment"],
+    }),
+    makePayment: builder.mutation({
+      query: (body) => ({
+        url: `payment/makePayment`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Payment"],
+    }),
+    updatePaymentStatus: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `payment/${id}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["Payment"],
+    }),
+    checkCard: builder.query({
+      query: ({ customerId }) => {
+        return {
+          url: `payment/checkCard/${customerId}`,
+          method: "GET",
+        };
+      },
+      providesTags: ["Payment"],
+    }),
+    getCustomerPayments: builder.query({
+      query: ({ customerId }) => {
+        return {
+          url: `payment/${customerId}`,
+          method: "GET",
+        };
+      },
+      providesTags: ["Payment"],
+    }),
+    getAdminEarnings: builder.query({
+      query: () => {
+        return {
+          url: `payment`,
+          method: "GET",
+        };
+      },
+      providesTags: ["Payment"],
+    }),
+    getDriverEarnings: builder.query({
+      query: ({ id }) => {
+        return {
+          url: `payment/driverEarnings/${id}`,
+          method: "GET",
+        };
+      },
+      providesTags: ["Payment"],
+    }),
   }),
 });
 
@@ -117,4 +191,12 @@ export const {
   useGetAllRidesQuery,
   useTriggerEventsMutation,
   useTerminateUserConnectionMutation,
+  useAddCardMutation,
+  useCheckCardQuery,
+  useCreatePaymentMutation,
+  useGetCustomerPaymentsQuery,
+  useMakePaymentMutation,
+  useUpdatePaymentStatusMutation,
+  useGetAdminEarningsQuery,
+  useGetDriverEarningsQuery,
 } = api;

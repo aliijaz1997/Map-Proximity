@@ -16,12 +16,14 @@ const userRoute = require("./routes/userRoute");
 const locationRoute = require("./routes/locationRoute");
 const rideRoute = require("./routes/ride");
 const eventRoute = require("./routes/events");
+const paymentRoute = require("./routes/payments");
 const VerifyToken = require("./middlewares/verifyToken");
 
 app.use("/api/users", VerifyToken, userRoute);
 app.use("/api/location", VerifyToken, locationRoute);
 app.use("/api/ride", VerifyToken, rideRoute);
 app.use("/api/pusher", eventRoute);
+app.use("/api/payment", VerifyToken, paymentRoute);
 
 const port = process.env.PORT || 5000;
 

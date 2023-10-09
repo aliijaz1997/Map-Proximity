@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
+  useCreatePaymentMutation,
   useUpdateRideMutation,
-  useUpdateUserMutation,
 } from "../../app/service/api";
 import { showNotification } from "../../features/common/headerSlice";
 import { useDispatch } from "react-redux";
@@ -13,7 +13,7 @@ export default function RideEndedModal({ closeModal, extraObject }) {
 
   const { rideRequestData, driver, customerChannel } = extraObject;
   const [updateRide, { isSuccess }] = useUpdateRideMutation();
-  const [updateDriver] = useUpdateUserMutation();
+  const [createPayment] = useCreatePaymentMutation();
 
   useEffect(() => {
     if (isSuccess) {
@@ -24,21 +24,34 @@ export default function RideEndedModal({ closeModal, extraObject }) {
         })
       );
       closeModal();
-      window.location.href = "/customer";
+      window.location.href = "/payment";
     }
   }, [isSuccess]);
 
-  const handleRatingClick = (value) => {
+  const handleRatingClick = async (value) => {
     const ratingValue = parseInt(value);
     setRating(ratingValue);
 
-    updateRide({
+    await customerChannel.trigger(`client-status-change-request`, {
+      id: driver._id,
+      status: "online",
+    });
+    await updateRide({
       id: rideRequestData.rideId,
       body: { rating: ratingValue },
     });
-    customerChannel.trigger(`client-status-change-request`, {
-      id: driver._id,
-      status: "online",
+    await createPayment({
+      status: "pending",
+      driver: {
+        _id: driver._id,
+        name: `${driver.firstName} ${driver.lastName}`,
+      },
+      customer: {
+        _id: rideRequestData.customer._id,
+        name: `${rideRequestData.customer.firstName} ${rideRequestData.customer.lastName}`,
+      },
+      amount: rideRequestData.rideInformation.fare,
+      location: rideRequestData.rideInformation.destination.address,
     });
   };
   return (

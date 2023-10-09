@@ -115,6 +115,7 @@ function Header() {
                       id: user._id,
                       status: "offline",
                     });
+                    console.log("click to offline");
                   } else {
                     console.log("click to online");
                     channelRef.current.trigger(`client-status-change-request`, {
