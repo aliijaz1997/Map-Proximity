@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  useCreatePaymentMutation,
-  useUpdateRideMutation,
-} from "../../app/service/api";
+import { useUpdateRideMutation } from "../../app/service/api";
 import { showNotification } from "../../features/common/headerSlice";
 import { useDispatch } from "react-redux";
 
@@ -13,7 +10,6 @@ export default function RideEndedModal({ closeModal, extraObject }) {
 
   const { rideRequestData, driver, customerChannel } = extraObject;
   const [updateRide, { isSuccess }] = useUpdateRideMutation();
-  const [createPayment] = useCreatePaymentMutation();
 
   useEffect(() => {
     if (isSuccess) {
@@ -39,19 +35,6 @@ export default function RideEndedModal({ closeModal, extraObject }) {
     await updateRide({
       id: rideRequestData.rideId,
       body: { rating: ratingValue },
-    });
-    await createPayment({
-      status: "pending",
-      driver: {
-        _id: driver._id,
-        name: `${driver.firstName} ${driver.lastName}`,
-      },
-      customer: {
-        _id: rideRequestData.customer._id,
-        name: `${rideRequestData.customer.firstName} ${rideRequestData.customer.lastName}`,
-      },
-      amount: rideRequestData.rideInformation.fare,
-      location: rideRequestData.rideInformation.destination.address,
     });
   };
   return (

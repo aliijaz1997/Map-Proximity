@@ -27,6 +27,12 @@ const rideSchema = new mongoose.Schema({
   },
   createdAt: { type: Date, default: Date.now },
   rating: { type: Number },
+  amount: { type: String },
+  paymentStatus: {
+    type: String,
+    enum: ["pending", "success"],
+    default: "pending",
+  },
 });
 
 module.exports = mongoose.model("Ride", rideSchema);

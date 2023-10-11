@@ -1,12 +1,10 @@
 import React from "react";
-import CustomerRidesStatus from "./RidesCompletedTable";
-import AverageRidesCustomer from "./AverageRidesStats";
+import CustomerStats from "./AverageCustomerRidesPerMonth";
 
 export default function CustomerDashboard() {
   return (
     <div>
-      <CustomerRidesStatus />
-      <AverageRidesCustomer />
+      <CustomerStats />
     </div>
   );
 }

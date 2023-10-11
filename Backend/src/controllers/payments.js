@@ -2,7 +2,7 @@ const stripe = require("stripe")(
   "sk_test_51JbjUUEHe38urH12QnhBcl7jIOXGrpIF5bvzT42rEIDeD8cqLIFAqPeGotmWqjmUuw1m2GUF27diD34mFNQPyUYv003D0eGqcu"
 );
 const User = require("../models/user");
-const Payment = require("../models/payment");
+const Ride = require("../models/ride");
 
 exports.addCard = async (req, res, next) => {
   try {
@@ -100,77 +100,13 @@ exports.makePayment = async (req, res, next) => {
   }
 };
 
-exports.createPayment = async (req, res) => {
-  const { status, driver, customer, amount, location } = req.body;
-
-  try {
-    // Create a new payment document
-    const newPayment = new Payment({
-      status,
-      driver,
-      customer,
-      amount,
-      location,
-    });
-
-    // Save the payment document to the database
-    const savedPayment = await newPayment.save();
-
-    res.status(201).json(savedPayment);
-  } catch (err) {
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
-
-exports.findAllPayments = async (req, res) => {
-  try {
-    const payments = await Payment.find();
-    res.status(200).json(payments);
-  } catch (err) {
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
-
-exports.findCustomerPayments = async (req, res) => {
-  const customerId = req.params.customerId;
-
-  try {
-    // Adjust the query to match the new schema
-    const payments = await Payment.find({ "customer._id": customerId });
-    res.status(200).json(payments);
-  } catch (err) {
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
-
-exports.updatePaymentStatus = async (req, res) => {
-  const paymentId = req.params.paymentId;
-  const { status } = req.body;
-
-  try {
-    const updatedPayment = await Payment.findByIdAndUpdate(
-      paymentId,
-      { status },
-      { new: true }
-    );
-
-    if (!updatedPayment) {
-      return res.status(404).json({ error: "Payment not found" });
-    }
-
-    res.status(200).json(updatedPayment);
-  } catch (err) {
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
-
 exports.adminTotalEarnings = async (req, res) => {
   try {
-    const successfulPayments = await Payment.find({ status: "success" });
+    const successfulRides = await Ride.find({ paymentStatus: "success" });
 
     let adminEarnings = 0;
-    successfulPayments.forEach((payment) => {
-      const amount = parseFloat(payment.amount);
+    successfulRides.forEach((ride) => {
+      const amount = parseFloat(ride.amount);
 
       const adminShare = amount * 0.2;
       adminEarnings += adminShare;
@@ -187,14 +123,14 @@ exports.driverTotalEarnings = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const successfulPayments = await Payment.find({
+    const successfulRides = await Ride.find({
       "driver._id": id,
-      status: "success",
+      paymentStatus: "success",
     });
 
     let driverEarnings = 0;
-    successfulPayments.forEach((payment) => {
-      const amount = parseFloat(payment.amount);
+    successfulRides.forEach((ride) => {
+      const amount = parseFloat(ride.amount);
 
       const driverShare = amount * 0.8;
       driverEarnings += driverShare;

@@ -25,7 +25,8 @@ function Header() {
   const { data: user, isLoading } = useGetUserByIdQuery({
     id: reduxUser?.uid,
   });
-  console.log("user from header", user?.driverStatus);
+  const [driverStatus, setDriverStatus] = useState(user?.driverStatus);
+  console.log("Driver status useState", driverStatus);
   const [updateUser] = useUpdateUserMutation();
 
   const dispatch = useDispatch();
@@ -43,11 +44,12 @@ function Header() {
     );
     channelRef.current = driverChannel;
     driverChannel.bind(`client-status-change-request`, ({ id, status }) => {
+      console.log("EVENT RECIEVED");
       updateUser({ id, driverStatus: status });
       dispatch(changeDriverStatus({ id, status }));
+      setDriverStatus(status);
     });
   }, [user]);
-
   useEffect(() => {
     themeChange(false);
     if (currentTheme === null) {
@@ -100,8 +102,7 @@ function Header() {
             {user.role === "driver" && (
               <button
                 className={`rounded-full w-14 h-6 ${
-                  user?.driverStatus === "online" ||
-                  user?.driverStatus === "engaged"
+                  driverStatus === "online" || driverStatus === "engaged"
                     ? "bg-green-500"
                     : "bg-gray-300"
                 }`}
@@ -124,12 +125,11 @@ function Header() {
                     });
                   }
                 }}
-                disabled={user?.driverStatus === "engaged"}
+                disabled={driverStatus === "engaged"}
               >
                 <span
                   className={`block w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                    user?.driverStatus === "online" ||
-                    user?.driverStatus === "engaged"
+                    driverStatus === "online" || driverStatus === "engaged"
                       ? "translate-x-8 bg-white"
                       : "translate-x-0 bg-gray-500"
                   }`}

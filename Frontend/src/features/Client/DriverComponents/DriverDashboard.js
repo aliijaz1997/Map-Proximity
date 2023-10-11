@@ -5,8 +5,43 @@ import CircleStackIcon from "@heroicons/react/24/outline/CircleStackIcon";
 import CreditCardIcon from "@heroicons/react/24/outline/CreditCardIcon";
 import MonthlyEarningChart from "./MonthlyEarningChart";
 import MonthlyRidesChart from "./MonthlyRidesChart";
+import { useSelector } from "react-redux";
+import { useGetDriverStatsQuery } from "../../../app/service/api";
+import Loader from "../../../components/Loader/Loader";
 
 export default function DriverDashboard() {
+  const { user } = useSelector((state) => state.auth);
+  const { data: driverStat, isLoading } = useGetDriverStatsQuery({
+    id: user.uid,
+  });
+
+  if (!user || !driverStat || isLoading) return <Loader />;
+  let statsData = [
+    {
+      title: "Total Rides",
+      value: driverStat.totalRides,
+      icon: <TruckIcon className="w-8 h-8" />,
+      description: "You're total rides with us!",
+    },
+    {
+      title: "Total Earnings",
+      value: `$${driverStat.totalEarnings}`,
+      icon: <CreditCardIcon className="w-8 h-8" />,
+      description: "You're total earnings",
+    },
+    {
+      title: "Pending Payments",
+      value: driverStat.pendingPayments,
+      icon: <CircleStackIcon className="w-8 h-8" />,
+      description: "You're pending amount",
+    },
+    {
+      title: "Today's Rides",
+      value: driverStat.currentDayRides,
+      icon: <TruckIcon className="w-8 h-8" />,
+      description: "You total rides for today",
+    },
+  ];
   return (
     <div>
       <div className="grid lg:grid-cols-4 mt-2 md:grid-cols-2 grid-cols-1 gap-6">
@@ -22,30 +57,3 @@ export default function DriverDashboard() {
     </div>
   );
 }
-
-let statsData = [
-  {
-    title: "Total Rides",
-    value: "400",
-    icon: <TruckIcon className="w-8 h-8" />,
-    description: "22%",
-  },
-  {
-    title: "Total Earnings",
-    value: "$34,545",
-    icon: <CreditCardIcon className="w-8 h-8" />,
-    description: "Current month",
-  },
-  {
-    title: "Pending Payments",
-    value: "450",
-    icon: <CircleStackIcon className="w-8 h-8" />,
-    description: "50 in hot leads",
-  },
-  {
-    title: "Today Rides",
-    value: "12",
-    icon: <TruckIcon className="w-8 h-8" />,
-    description: "18%",
-  },
-];

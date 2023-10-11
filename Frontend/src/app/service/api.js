@@ -87,6 +87,7 @@ export const api = createApi({
         method: "PUT",
         body,
       }),
+      invalidatesTags: ["Payment"],
     }),
     triggerEvents: builder.mutation({
       query: (body) => ({
@@ -102,12 +103,6 @@ export const api = createApi({
       }),
     }),
     addCard: builder.mutation({
-      query: ({ id }) => ({
-        url: `payment`,
-        method: "POST",
-      }),
-    }),
-    addCard: builder.mutation({
       query: (body) => ({
         url: `payment/addCard`,
         method: "POST",
@@ -115,26 +110,11 @@ export const api = createApi({
       }),
       invalidatesTags: ["Payment", "User"],
     }),
-    createPayment: builder.mutation({
-      query: (body) => ({
-        url: `payment`,
-        method: "POST",
-        body,
-      }),
-      invalidatesTags: ["Payment"],
-    }),
+
     makePayment: builder.mutation({
       query: (body) => ({
         url: `payment/makePayment`,
         method: "POST",
-        body,
-      }),
-      invalidatesTags: ["Payment"],
-    }),
-    updatePaymentStatus: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `payment/${id}`,
-        method: "PUT",
         body,
       }),
       invalidatesTags: ["Payment"],
@@ -148,19 +128,10 @@ export const api = createApi({
       },
       providesTags: ["Payment"],
     }),
-    getCustomerPayments: builder.query({
-      query: ({ customerId }) => {
-        return {
-          url: `payment/${customerId}`,
-          method: "GET",
-        };
-      },
-      providesTags: ["Payment"],
-    }),
     getAdminEarnings: builder.query({
       query: () => {
         return {
-          url: `payment`,
+          url: `payment/adminEarnings`,
           method: "GET",
         };
       },
@@ -170,6 +141,42 @@ export const api = createApi({
       query: ({ id }) => {
         return {
           url: `payment/driverEarnings/${id}`,
+          method: "GET",
+        };
+      },
+      providesTags: ["Payment"],
+    }),
+    getUserRides: builder.query({
+      query: ({ id, userType }) => {
+        return {
+          url: `ride/${userType}/${id}`,
+          method: "GET",
+        };
+      },
+      providesTags: [],
+    }),
+    getLatestPendingRide: builder.query({
+      query: ({ id }) => {
+        return {
+          url: `ride/pending/${id}`,
+          method: "GET",
+        };
+      },
+      providesTags: ["Payment"],
+    }),
+    getCustomerStats: builder.query({
+      query: ({ id }) => {
+        return {
+          url: `ride/customer/${id}/stats`,
+          method: "GET",
+        };
+      },
+      providesTags: ["Payment"],
+    }),
+    getDriverStats: builder.query({
+      query: ({ id }) => {
+        return {
+          url: `ride/driver/${id}/stats`,
           method: "GET",
         };
       },
@@ -193,10 +200,11 @@ export const {
   useTerminateUserConnectionMutation,
   useAddCardMutation,
   useCheckCardQuery,
-  useCreatePaymentMutation,
-  useGetCustomerPaymentsQuery,
   useMakePaymentMutation,
-  useUpdatePaymentStatusMutation,
   useGetAdminEarningsQuery,
   useGetDriverEarningsQuery,
+  useGetUserRidesQuery,
+  useGetLatestPendingRideQuery,
+  useGetCustomerStatsQuery,
+  useGetDriverStatsQuery,
 } = api;

@@ -187,6 +187,7 @@ export default function DriverClient() {
                         name: user.firstName,
                       },
                       rideInformation: rideRequestData?.rideInformation,
+                      amount: rideRequestData.rideInformation.fare,
                     },
                   });
                 }}
