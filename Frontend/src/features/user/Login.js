@@ -2,9 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import ErrorText from "../../components/Typography/ErrorText";
 import InputText from "../../components/Input/InputText";
-import { useDispatch, useSelector } from "react-redux";
-import { registerOrLoginUser } from "../../app/slices/authSlice";
-import SelectBox from "../../components/Input/SelectBox";
+import { useSelector } from "react-redux";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,

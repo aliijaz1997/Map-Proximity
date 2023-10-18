@@ -108,9 +108,27 @@ exports.getCustomerStats = async (req, res) => {
       customerCategory = "Gold";
     }
 
+    const monthlyEarnings = await Ride.aggregate([
+      { $match: { "customer._id": customerId, paymentStatus: "success" } },
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          monthlyEarnings: { $sum: { $toDouble: "$amount" } },
+        },
+      },
+    ]);
+
+    const spendingPerMonth = Array(12).fill(0);
+
+    monthlyEarnings.forEach((item) => {
+      const monthIndex = item._id - 1;
+      spendingPerMonth[monthIndex] = item.monthlyEarnings;
+    });
+
     res.json({
       customerCategory,
       monthlyRides: result,
+      spendingPerMonth,
       averageAmount,
       totalAmount,
     });
@@ -163,7 +181,7 @@ exports.getDriverStats = async (req, res) => {
 
     monthlyEarnings.forEach((item) => {
       const monthIndex = item._id - 1;
-      earningsPerMonth[monthIndex] = item.monthlyEarnings;
+      earningsPerMonth[monthIndex] = item.monthlyEarnings * 0.8;
       ridesPerMonth[monthIndex] = item.monthlyRides;
     });
 

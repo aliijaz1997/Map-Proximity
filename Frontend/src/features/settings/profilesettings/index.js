@@ -1,6 +1,4 @@
-import moment from "moment";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import TitleCard from "../../../components/Cards/TitleCard";
 import { showNotification } from "../../common/headerSlice";
 import InputText from "../../../components/Input/InputText";
@@ -15,9 +13,9 @@ function ProfileSettings() {
     dispatch(showNotification({ message: "Profile Updated", status: 1 }));
   };
 
-  // const updateFormValue = ({ updateType, value }) => {
-  //   console.log(updateType);
-  // };
+  const updateFormValue = ({ updateType, value }) => {
+    console.log(updateType);
+  };
 
   return (
     <>

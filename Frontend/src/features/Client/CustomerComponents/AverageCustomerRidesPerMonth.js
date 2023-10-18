@@ -67,6 +67,24 @@ function CustomerStats() {
         borderColor: "rgb(53, 162, 235)",
         backgroundColor: "rgba(53, 162, 235, 0.5)",
       },
+      {
+        fill: true,
+        label: "Spending Per month",
+        data: rideRecord?.spendingPerMonth.map((amount, idx) => {
+          return amount;
+        }),
+        borderColor: "rgb(0, 128, 0)",
+        backgroundColor: "rgba(0, 128, 0, 0.5)",
+      },
+      {
+        fill: true,
+        label: "Average amount of the year",
+        data: labels.map((_month, idx) => {
+          return rideRecord?.averageAmount.toFixed(2);
+        }),
+        borderColor: "rgb(255, 0, 0)",
+        backgroundColor: "rgba(255, 0, 0, 0.5)",
+      },
     ],
   };
 
