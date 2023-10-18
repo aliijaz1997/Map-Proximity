@@ -25,7 +25,6 @@ const presenceChannelSlice = createSlice({
       if (memberIndex !== -1) {
         const updatedMembers = [...state.activeDrivers];
         updatedMembers[memberIndex].info.driverStatus = status;
-        console.log(updatedMembers, "Redux toolkit");
         state.activeDrivers = updatedMembers;
       }
     },

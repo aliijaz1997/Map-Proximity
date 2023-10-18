@@ -51,8 +51,11 @@ export default function DriverDashboard() {
       </div>
       {/** ---------------------- Different charts ------------------------- */}
       <div className="grid lg:grid-cols-2 mt-4 grid-cols-1 gap-6">
-        <MonthlyEarningChart />
-        <MonthlyRidesChart />
+        <MonthlyEarningChart earningsPerMonth={driverStat.earningsPerMonth} />
+        <MonthlyRidesChart
+          ridesPerMonth={driverStat.ridesPerMonth}
+          earningsPerMonth={driverStat.earningsPerMonth}
+        />
       </div>
     </div>
   );

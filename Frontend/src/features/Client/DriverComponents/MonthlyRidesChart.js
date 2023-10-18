@@ -19,7 +19,7 @@ ChartJS.register(
   Legend
 );
 
-function MonthlyRidesChart() {
+function MonthlyRidesChart({ ridesPerMonth, earningsPerMonth }) {
   const options = {
     responsive: true,
     plugins: {
@@ -37,6 +37,11 @@ function MonthlyRidesChart() {
     "May",
     "June",
     "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   const data = {
@@ -44,17 +49,17 @@ function MonthlyRidesChart() {
     datasets: [
       {
         label: "Rides",
-        data: labels.map(() => {
-          return Math.random() * 10 + 50;
+        data: ridesPerMonth.map((ride) => {
+          return ride;
         }),
-        backgroundColor: "rgba(255, 99, 132, 1)",
+        backgroundColor: "rgba(255, 228, 225, 1.0)",
       },
       {
         label: "Earning",
-        data: labels.map(() => {
-          return Math.random() * 1000 + 500;
+        data: earningsPerMonth.map((earning) => {
+          return earning;
         }),
-        backgroundColor: "rgba(53, 162, 235, 1)",
+        backgroundColor: "rgba(25, 25, 112, 1.0)",
       },
     ],
   };

@@ -5,7 +5,6 @@ exports.triggerEvents = async (req, res, next) => {
   try {
     const { eventName, bodyData } = req.body;
     if (eventName && bodyData) {
-      console.log(eventName, "RIDE RECEIVED");
       pusher
         .trigger("presence-ride", eventName, bodyData)
         .then((response) => {
@@ -33,7 +32,6 @@ exports.authenticateUser = async (req, res, next) => {
     };
 
     const authenticateUser = pusher.authenticateUser(socketId, presenceData);
-    console.log(authenticateUser, "Authenticated");
     res.send(authenticateUser);
   } catch (error) {
     console.error("Pusher authentication error:", error);
@@ -58,7 +56,7 @@ exports.authorizeChannel = async (req, res, next) => {
         channelName,
         presenceData
       );
-      console.log(authorizedChannel, "Authorized");
+
       res.send(authorizedChannel);
     }
   } catch (error) {

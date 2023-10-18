@@ -7,7 +7,6 @@ const Ride = require("../models/ride");
 exports.addCard = async (req, res, next) => {
   try {
     const { token, email, id } = req.body;
-    console.log(token, email);
     if (token && email) {
       // Create a PaymentMethod from the token
       const paymentMethod = await stripe.paymentMethods.create({
@@ -35,7 +34,6 @@ exports.addCard = async (req, res, next) => {
       return res.json({ customer, paymentMethod });
     }
   } catch (error) {
-    console.error(error);
     return res
       .status(500)
       .json({ error: "An error occurred while saving the card", error });
@@ -50,7 +48,6 @@ exports.checkSavedCard = async (req, res, next) => {
         customer: customerId,
         type: "card",
       });
-      console.log(paymentMethods);
       if (paymentMethods) {
         return res.json(paymentMethods);
       } else {
@@ -60,7 +57,6 @@ exports.checkSavedCard = async (req, res, next) => {
       }
     }
   } catch (error) {
-    console.log(error);
     return res
       .status(500)
       .json({ error: "An error occurred while checking the card", error });
@@ -93,7 +89,6 @@ exports.makePayment = async (req, res, next) => {
       res.json({ message: "Payment successful" });
     }
   } catch (error) {
-    console.error(error);
     res
       .status(500)
       .json({ error: "An error occurred while processing the payment" });
@@ -105,16 +100,18 @@ exports.adminTotalEarnings = async (req, res) => {
     const successfulRides = await Ride.find({ paymentStatus: "success" });
 
     let adminEarnings = 0;
+    let driversEarnings = 0;
     successfulRides.forEach((ride) => {
       const amount = parseFloat(ride.amount);
 
       const adminShare = amount * 0.2;
+      const driverShare = amount * 0.8;
       adminEarnings += adminShare;
+      driversEarnings += driverShare;
     });
 
-    res.json(adminEarnings);
+    res.json({ adminEarnings, driversEarnings });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -138,7 +135,6 @@ exports.driverTotalEarnings = async (req, res) => {
 
     res.json(driverEarnings);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };

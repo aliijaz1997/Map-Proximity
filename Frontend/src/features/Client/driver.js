@@ -14,6 +14,10 @@ export default function DriverClient() {
   const [showRequestModal, setShowRequestModal] = React.useState(false);
   const [rideRequestData, setRideRequestData] = React.useState(null);
   const [remainingTime, setRemainingTime] = React.useState(null);
+  const [showPaymentSuccessModal, setShowPaymentSuccessModal] = React.useState({
+    status: false,
+    data: null,
+  });
 
   const { user: reduxUser } = useSelector((state) => state.auth);
   const { data: user, isLoading } = useGetUserByIdQuery({
@@ -43,7 +47,6 @@ export default function DriverClient() {
   const checkForInactivity = () => {
     const expireTime = localStorage.getItem("expireTime");
     if (expireTime < Date.now()) {
-      console.log("User is inavtive", user);
       if (user && user.driverStatus === "online") {
         channelRef.current.trigger(`client-status-change-request`, {
           id: user._id,
@@ -110,9 +113,12 @@ export default function DriverClient() {
       console.log(member, "REMOVED");
     });
     driverChannel.bind(`presence-request-${user._id}`, (data) => {
-      console.log("Customer Request Information", data);
       setRideRequestData(data);
       setShowRequestModal(true);
+    });
+
+    driverChannel.bind(`client-payment-success-${user._id}`, (data) => {
+      setShowPaymentSuccessModal({ status: true, data });
     });
   }, [user]);
 
@@ -129,7 +135,6 @@ export default function DriverClient() {
     document.body.classList.remove("loading-indicator");
   }
 
-  console.log(rideRequestData, "kjhkjdh");
   return (
     <div className=" dark:text-gray-300 flex justify-center items-center mt-8">
       Hey {user.firstName} {user.lastName}The popup will appear when any
@@ -195,6 +200,27 @@ export default function DriverClient() {
                 Accept
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {showPaymentSuccessModal?.status && (
+        <div className="fixed bg-white inset-0 flex justify-center items-center z-50 bg bg-opacity-75">
+          <div className=" rounded-lg p-8 relative">
+            <h2 className="text-xl font-bold mb-4 text-green-700">
+              Payment Success Modal
+            </h2>
+            <p className="text-green-700">
+              The customer named {showPaymentSuccessModal?.data?.name} has pay{" "}
+              {showPaymentSuccessModal?.data?.amount} for the recent ride
+            </p>
+            <button
+              className="btn btn-secondary"
+              onClick={() =>
+                setShowPaymentSuccessModal({ status: false, data: null })
+              }
+            >
+              Got it
+            </button>
           </div>
         </div>
       )}

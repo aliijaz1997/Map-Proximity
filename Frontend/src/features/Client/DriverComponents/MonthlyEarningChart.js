@@ -23,7 +23,7 @@ ChartJS.register(
   Legend
 );
 
-function MonthlyEarningChart() {
+function MonthlyEarningChart({ earningsPerMonth }) {
   const options = {
     responsive: true,
     plugins: {
@@ -41,19 +41,23 @@ function MonthlyEarningChart() {
     "May",
     "June",
     "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   const data = {
     labels,
     datasets: [
       {
-        fill: true,
         label: "Amount in USD",
-        data: labels.map(() => {
-          return Math.random() * 1000 + 500;
+        data: earningsPerMonth.map((amount) => {
+          return amount;
         }),
-        borderColor: "rgb(53, 162, 235)",
-        backgroundColor: "rgba(53, 162, 235, 0.5)",
+        borderColor: "rgb(255, 99, 132)", // A shade of red
+        backgroundColor: "rgba(255, 99, 132, 0.2)",
       },
     ],
   };

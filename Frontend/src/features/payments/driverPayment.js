@@ -9,7 +9,7 @@ const DriverPayment = () => {
   const { data: totalDriverEarning, isLoading } = useGetDriverEarningsQuery({
     id: user?.uid,
   });
-  console.log(totalDriverEarning);
+
   if (isLoading || !totalDriverEarning || !user) {
     return <Loader />;
   }

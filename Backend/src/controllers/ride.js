@@ -50,16 +50,14 @@ exports.getUserRides = async (req, res, next) => {
 };
 
 exports.getPendingPaymentRide = async (req, res) => {
-  console.log("request received");
   try {
     const customerId = req.params.customerId;
     const rides = await Ride.find({
       "customer._id": customerId,
       paymentStatus: "pending",
     })
-      // .sort({ createdAt: -1 })
+      .sort({ createdAt: -1 })
       .limit(1);
-    console.log({ rides });
     if (rides.length > 0) {
       return res.json(rides[0]);
     } else {
@@ -149,11 +147,33 @@ exports.getDriverStats = async (req, res) => {
       createdAt: { $gte: today },
     });
 
+    const monthlyEarnings = await Ride.aggregate([
+      { $match: { "driver._id": driverId, paymentStatus: "success" } },
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          monthlyEarnings: { $sum: { $toDouble: "$amount" } },
+          monthlyRides: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const earningsPerMonth = Array(12).fill(0);
+    const ridesPerMonth = Array(12).fill(0);
+
+    monthlyEarnings.forEach((item) => {
+      const monthIndex = item._id - 1;
+      earningsPerMonth[monthIndex] = item.monthlyEarnings;
+      ridesPerMonth[monthIndex] = item.monthlyRides;
+    });
+
     res.json({
       totalRides,
       totalEarnings: totalEarnings[0] ? totalEarnings[0].total : 0,
       pendingPayments,
       currentDayRides,
+      earningsPerMonth,
+      ridesPerMonth,
     });
   } catch (error) {
     console.error(error);

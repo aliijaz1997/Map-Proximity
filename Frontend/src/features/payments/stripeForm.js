@@ -27,13 +27,12 @@ const StripeForm = () => {
     const cardElement = elements.getElement(CardElement);
     try {
       const { token } = await stripe.createToken(cardElement);
-      console.log(token, "TOKEN");
-      const response = await addCard({
+
+      await addCard({
         token: token.id,
         email: user.email,
         id: user.uid,
       });
-      console.log(response, "RESPONSE");
     } catch (error) {
       console.error(error);
       setErrorMessage("Error saving card. Please try again.");
@@ -45,7 +44,7 @@ const StripeForm = () => {
   if (!user) {
     return <div>No user</div>;
   }
-  console.log({ customerCard });
+
   return (
     <div className="flex flex-col text-center">
       <div className="font-bold text-2xl text-blue-600 mb-5">

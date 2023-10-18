@@ -69,7 +69,7 @@ function CustomerStats() {
       },
     ],
   };
-  console.log({ rideRecord });
+
   if (!rideRecord || !user || isLoading) {
     return <Loader />;
   }

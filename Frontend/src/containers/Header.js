@@ -12,11 +12,7 @@ import { Link } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../utils/firebase";
 import { logoutRedux } from "../app/slices/authSlice";
-import {
-  useGetUserByIdQuery,
-  useTerminateUserConnectionMutation,
-  useUpdateUserMutation,
-} from "../app/service/api";
+import { useGetUserByIdQuery, useUpdateUserMutation } from "../app/service/api";
 import { changeDriverStatus } from "../app/slices/presenceChannelSlice";
 import { PusherInstance } from "../utils/pusher/default";
 
@@ -26,7 +22,6 @@ function Header() {
     id: reduxUser?.uid,
   });
   const [driverStatus, setDriverStatus] = useState(user?.driverStatus);
-  console.log("Driver status useState", driverStatus);
   const [updateUser] = useUpdateUserMutation();
 
   const dispatch = useDispatch();
@@ -44,7 +39,6 @@ function Header() {
     );
     channelRef.current = driverChannel;
     driverChannel.bind(`client-status-change-request`, ({ id, status }) => {
-      console.log("EVENT RECIEVED");
       updateUser({ id, driverStatus: status });
       dispatch(changeDriverStatus({ id, status }));
       setDriverStatus(status);
@@ -108,7 +102,6 @@ function Header() {
                 }`}
                 onClick={() => {
                   if (!user && !channelRef.current) {
-                    console.log("Something Missing");
                     return;
                   }
                   if (user.driverStatus === "online") {
@@ -116,9 +109,7 @@ function Header() {
                       id: user._id,
                       status: "offline",
                     });
-                    console.log("click to offline");
                   } else {
-                    console.log("click to online");
                     channelRef.current.trigger(`client-status-change-request`, {
                       id: user._id,
                       status: "online",

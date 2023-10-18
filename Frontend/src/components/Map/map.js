@@ -3,9 +3,7 @@ import { getMapStyles } from "./Styles";
 import {
   useGetLocationQuery,
   useGetUserByIdQuery,
-  useGetUsersQuery,
   useTriggerEventsMutation,
-  useUpdateUserMutation,
 } from "../../app/service/api";
 import { useDispatch, useSelector } from "react-redux";
 import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
@@ -23,7 +21,6 @@ import uuid from "react-uuid";
 import {
   changeDriverStatus,
   setActiveDrivers,
-  setEngagedDrivers,
 } from "../../app/slices/presenceChannelSlice";
 import { getNearestDriver } from "../../utils/pusher/getNearestDriver";
 
@@ -46,8 +43,6 @@ const Map = () => {
   const { data: user, isLoading } = useGetUserByIdQuery({
     id: reduxUser?.uid,
   });
-  const { data: allUsers } = useGetUsersQuery({ role: "drivers" });
-  const [updateUser] = useUpdateUserMutation();
   const { data: polygons, isLoading: isLocationLoading } =
     useGetLocationQuery();
   const [triggerEvent] = useTriggerEventsMutation();
@@ -167,7 +162,6 @@ const Map = () => {
           latitude: newLocation.lat(),
           longitude: newLocation.lng(),
         });
-        console.log(newLocation.lat(), newLocation.lng());
         if (fromInputRef.current) {
           fromInputRef.current.value = address.formatted_address;
         }
@@ -283,7 +277,7 @@ const Map = () => {
                   setRideInformation({
                     distance,
                     duration,
-                    fare: parseInt(distance) * 20 + 100,
+                    fare: parseInt(distance) * 5,
                     destination: {
                       coordinates: {
                         lat: destination.geometry.location.lat(),
@@ -316,7 +310,7 @@ const Map = () => {
     fromInputRef.current,
     polygons,
   ]);
-  console.log("Members", activeDrivers);
+
   useEffect(() => {
     if (!user) return;
     const customerChannel = PusherInstance({
@@ -359,7 +353,6 @@ const Map = () => {
       dispatch(setActiveDrivers(updatedMembers));
     });
     customerChannel.bind(`presence-accepted-${user._id}`, ({ driver }) => {
-      console.log(user, "In Map", { driver });
       dispatch(closeModal());
       setDriversLocation(driver.location);
       customerChannel.trigger(`client-status-change-request`, {
@@ -457,7 +450,7 @@ const Map = () => {
                     driversList: activeDrivers,
                     pickupLocation: rideInformation.origin.coordinates,
                   });
-                  console.log({ driverToRequest });
+
                   if (driverToRequest) {
                     openFindingRideModal();
                     triggerEvent({

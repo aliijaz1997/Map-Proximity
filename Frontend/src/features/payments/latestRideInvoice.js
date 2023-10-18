@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   useGetLatestPendingRideQuery,
   useGetUserByIdQuery,
@@ -8,6 +8,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import Loader from "../../components/Loader/Loader";
 import { showNotification } from "../common/headerSlice";
+import { PusherInstance } from "../../utils/pusher/default";
 
 export default function LatestRideInvoice() {
   const { user } = useSelector((state) => state.auth);
@@ -16,12 +17,20 @@ export default function LatestRideInvoice() {
     id: user.uid,
   });
 
-  console.log({ ride });
+  const channelRef = useRef(null);
 
-  const [makePayment, { isSuccess, isError }] = useMakePaymentMutation();
-  const [updateRide] = useUpdateRideMutation();
+  const [makePayment, { isSuccess, isError, isLoading: makingPayment }] =
+    useMakePaymentMutation();
+  const [updateRide, { isLoading: updatingRide }] = useUpdateRideMutation();
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    if (!user && !channelRef.current) return;
+    const driverChannel = PusherInstance({ user_id: user.uid }).subscribe(
+      "presence-ride"
+    );
+    channelRef.current = driverChannel;
+  }, [user]);
   useEffect(() => {
     if (isSuccess) {
       dispatch(
@@ -53,10 +62,19 @@ export default function LatestRideInvoice() {
           paymentStatus: "success",
         },
       });
+
+      channelRef.current.trigger(`client-payment-success-${ride.driver._id}`, {
+        name: ride.customer.name,
+        amount: ride.amount,
+      });
     }
   };
-  console.log(user, isLoading);
+
   if (!user || isLoading) {
+    return <Loader />;
+  }
+
+  if (makingPayment || updatingRide) {
     return <Loader />;
   }
   return (
