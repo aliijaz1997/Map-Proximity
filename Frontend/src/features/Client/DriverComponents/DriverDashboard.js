@@ -12,7 +12,7 @@ import Loader from "../../../components/Loader/Loader";
 export default function DriverDashboard() {
   const { user } = useSelector((state) => state.auth);
   const { data: driverStat, isLoading } = useGetDriverStatsQuery({
-    id: user.uid,
+    id: user?.uid,
   });
 
   if (!user || !driverStat || isLoading) return <Loader />;

@@ -80,3 +80,42 @@ exports.deleteUserById = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.userStats = async (_req, res) => {
+  try {
+    const totalUsers = await User.countDocuments({});
+    const totalAdmins = await User.countDocuments({ role: "admin" });
+    const totalDrivers = await User.countDocuments({ role: "driver" });
+    const totalCustomers = await User.countDocuments({ role: "customer" });
+
+    const monthlyData = await User.aggregate([
+      {
+        $match: {
+          createdAt: { $exists: true },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: "$createdAt" },
+            year: { $year: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { "_id.year": 1, "_id.month": 1 },
+      },
+    ]);
+
+    res.json({
+      totalUsers,
+      totalAdmins,
+      totalDrivers,
+      totalCustomers,
+      monthlyData,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};

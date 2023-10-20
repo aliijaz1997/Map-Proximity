@@ -182,6 +182,15 @@ export const api = createApi({
       },
       providesTags: ["Payment"],
     }),
+    getAdminStats: builder.query({
+      query: () => {
+        return {
+          url: `users/stats`,
+          method: "GET",
+        };
+      },
+      providesTags: [""],
+    }),
   }),
 });
 
@@ -207,4 +216,5 @@ export const {
   useGetLatestPendingRideQuery,
   useGetCustomerStatsQuery,
   useGetDriverStatsQuery,
+  useGetAdminStatsQuery,
 } = api;
